@@ -9,15 +9,19 @@ const t = useTranslations(config.site.lang);
   class="hidden"
   id="i18n-copy"
   data-copy={t.post.copyCode}
-  data-copied={t.post.copied}></span>
+  data-copied={t.post.copied}
+  data-heading-anchor={t.a11y.headingAnchor}></span>
 
 <script is:inline data-astro-rerun>
+  window.__articleEnhancementsCleanup?.();
+  window.__articleEnhancementsController = new AbortController();
+
   function createProgressBar() {
     document.getElementById("myBar")?.parentElement?.remove();
 
     const progressContainer = document.createElement("div");
     progressContainer.className =
-      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+      "progress-container fixed top-0 z-50 h-1 w-full bg-background";
 
     const progressBar = document.createElement("div");
     progressBar.className = "progress-bar h-1 w-0 bg-accent";
@@ -29,35 +33,48 @@ const t = useTranslations(config.site.lang);
   createProgressBar();
 
   function updateScrollProgress() {
-    document.addEventListener(
-      "scroll",
-      () => {
-        const winScroll =
-          document.body.scrollTop || document.documentElement.scrollTop;
-        const height =
-          document.documentElement.scrollHeight -
-          document.documentElement.clientHeight;
-        const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
-        const myBar = document.getElementById("myBar");
-        if (myBar) {
-          myBar.style.width = scrolled + "%";
-        }
-      },
-      { passive: true }
-    );
+    function setProgress() {
+      const winScroll =
+        document.body.scrollTop || document.documentElement.scrollTop;
+      const height =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+      const myBar = document.getElementById("myBar");
+      if (myBar) {
+        myBar.style.width = scrolled + "%";
+      }
+    }
+
+    document.addEventListener("scroll", setProgress, {
+      passive: true,
+      signal: window.__articleEnhancementsController.signal,
+    });
+    setProgress();
   }
   updateScrollProgress();
 
   function addHeadingLinks() {
     const headings = Array.from(
-      document.querySelectorAll("h2, h3, h4, h5, h6")
+      document.querySelectorAll(
+        "#article h2[id], #article h3[id], #article h4[id]"
+      )
     );
+    const labelTemplate =
+      document.getElementById("i18n-copy")?.dataset.headingAnchor ||
+      "Link to section: {{title}}";
     for (const heading of headings) {
+      if (heading.querySelector(":scope > .heading-link")) continue;
+      const headingText = heading.textContent?.trim() || "";
       heading.classList.add("group");
       const link = document.createElement("a");
       link.className =
         "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
       link.href = "#" + heading.id;
+      link.setAttribute(
+        "aria-label",
+        labelTemplate.replace("{{title}}", headingText)
+      );
 
       const span = document.createElement("span");
       span.ariaHidden = "true";
@@ -110,7 +127,13 @@ const t = useTranslations(config.site.lang);
   }
   attachCopyButtons();
 
-  document.addEventListener("astro:after-swap", () =>
-    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
-  );
+  function cleanupArticleEnhancements() {
+    window.__articleEnhancementsController?.abort();
+  }
+
+  window.__articleEnhancementsCleanup = cleanupArticleEnhancements;
+  document.addEventListener("astro:before-swap", cleanupArticleEnhancements, {
+    once: true,
+    signal: window.__articleEnhancementsController.signal,
+  });
 </script>

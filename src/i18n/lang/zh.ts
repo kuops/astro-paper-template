@@ -70,6 +70,8 @@ export default {
     searchHintNavigate: "导航",
     searchHintOpen: "打开",
     searchHintClose: "关闭",
+    clearSearch: "清除搜索",
+    headingAnchor: "章节链接：{{title}}",
   },
   notFound: {
     title: "404",
@@ -81,6 +83,14 @@ export default {
     nextChapter: "下一章",
     tableOfContents: "目录",
     chapterNav: "章节导航",
+    backToBooks: "返回书籍",
+    openChapterNav: "打开章节目录",
+    closeChapterNav: "关闭章节目录",
+    chapters: "章节",
+    onThisPage: "本页",
+    chapterProgress: "第 {{current}} / {{total}} 章",
+    allChapters: "全部章节",
+    startReading: "开始阅读",
   },
   booksPage: {
     title: "书籍",

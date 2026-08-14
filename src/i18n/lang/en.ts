@@ -70,6 +70,8 @@ export default {
     searchHintNavigate: "navigate",
     searchHintOpen: "open",
     searchHintClose: "close",
+    clearSearch: "Clear search",
+    headingAnchor: "Link to section: {{title}}",
   },
   notFound: {
     title: "404 Not Found",
@@ -81,6 +83,14 @@ export default {
     nextChapter: "Next Chapter",
     tableOfContents: "Contents",
     chapterNav: "Chapter Navigation",
+    backToBooks: "Back to books",
+    openChapterNav: "Open chapter navigation",
+    closeChapterNav: "Close chapter navigation",
+    chapters: "Chapters",
+    onThisPage: "On this page",
+    chapterProgress: "Chapter {{current}} of {{total}}",
+    allChapters: "All chapters",
+    startReading: "Start reading",
   },
   booksPage: {
     title: "Books",

@@ -1,4 +1,8 @@
 ---
+import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import config from "@/config";
+import { useTranslations } from "@/i18n";
+
 type Props = {
   slug: string;
   title: string;
@@ -6,6 +10,7 @@ type Props = {
 };
 
 const { slug, title, description } = Astro.props;
+const t = useTranslations(config.site.lang);
 ---
 
 <a
@@ -16,5 +21,8 @@ const { slug, title, description } = Astro.props;
     {title}
   </h2>
   <p class="mt-2 text-sm text-foreground/60">{description}</p>
-  <span class="mt-4 inline-block text-sm text-accent"> 开始阅读 → </span>
+  <span class="mt-4 inline-flex items-center gap-1 text-sm text-accent">
+    {t.book.startReading}
+    <IconArrowRight class="size-4 rtl:rotate-180" />
+  </span>
 </a>

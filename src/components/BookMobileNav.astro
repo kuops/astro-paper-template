@@ -1,0 +1,501 @@
+---
+import BookChapterNav from "@/components/BookChapterNav.astro";
+import IconArrowLeft from "@/assets/icons/IconArrowLeft.svg";
+import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
+import IconX from "@/assets/icons/IconX.svg";
+import config from "@/config";
+import { tplStr, useTranslations } from "@/i18n";
+import type { SidebarGroup } from "@/types/books";
+import { getFlatItems } from "@/utils/books";
+
+const t = useTranslations(config.site.lang);
+
+type Props = {
+  bookTitle: string;
+  bookSlug: string;
+  sidebar: SidebarGroup[];
+  currentSlug: string;
+  titleMap: Record<string, string>;
+  headings: { depth: number; slug: string; text: string }[];
+};
+
+const { bookTitle, bookSlug, sidebar, currentSlug, titleMap, headings } =
+  Astro.props;
+const flatItems = getFlatItems(sidebar);
+const currentIndex = flatItems.indexOf(currentSlug);
+const currentNumber = Math.max(currentIndex + 1, 1);
+const chapterTitle = titleMap[currentSlug] || currentSlug;
+const progress = tplStr(t.book.chapterProgress, {
+  current: currentNumber,
+  total: flatItems.length,
+});
+const minDepth =
+  headings.length > 0 ? Math.min(...headings.map(heading => heading.depth)) : 2;
+---
+
+<div class="book-mobile-nav lg:hidden" data-book-mobile-nav>
+  <div class="book-mobile-bar">
+    <div
+      class="mx-auto grid h-[52px] w-full max-w-7xl grid-cols-[44px_minmax(0,1fr)_44px] items-center px-1 sm:px-4"
+    >
+      <a
+        href="/books"
+        class="focus-outline flex size-11 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-foreground/5 hover:text-accent active:bg-foreground/10"
+        aria-label={t.book.backToBooks}
+        title={t.book.backToBooks}
+      >
+        <IconArrowLeft class="size-5 rtl:rotate-180" />
+      </a>
+
+      <div class="min-w-0 px-2 leading-tight">
+        <div class="truncate text-sm font-semibold" title={bookTitle}>
+          {bookTitle}
+        </div>
+        <div
+          class="truncate pt-0.5 text-xs text-foreground/55"
+          title={`${progress} · ${chapterTitle}`}
+        >
+          {progress} · {chapterTitle}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="focus-outline flex size-11 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-foreground/5 hover:text-accent active:bg-foreground/10"
+        data-book-nav-open
+        aria-label={t.book.openChapterNav}
+        title={t.book.openChapterNav}
+        aria-expanded="false"
+        aria-controls="book-mobile-dialog"
+      >
+        <IconMenuDeep class="size-5" />
+      </button>
+    </div>
+  </div>
+
+  <dialog
+    id="book-mobile-dialog"
+    class="book-mobile-dialog"
+    aria-labelledby="book-mobile-dialog-title"
+    data-book-nav-dialog
+  >
+    <div class="book-dialog-shell">
+      <div class="book-dialog-handle" aria-hidden="true"></div>
+      <div class="flex min-h-12 items-center gap-3 px-4">
+        <div
+          id="book-mobile-dialog-title"
+          class="book-dialog-title min-w-0 flex-1 text-base font-semibold"
+        >
+          {bookTitle}
+        </div>
+        <button
+          type="button"
+          class="focus-outline flex size-11 flex-none items-center justify-center rounded-md text-foreground/60 transition-colors hover:bg-foreground/5 hover:text-accent active:bg-foreground/10"
+          data-book-nav-close
+          aria-label={t.book.closeChapterNav}
+          title={t.book.closeChapterNav}
+        >
+          <IconX class="size-5" />
+        </button>
+      </div>
+
+      <div
+        class="grid border-y border-border px-4"
+        style={`grid-template-columns: repeat(${headings.length > 0 ? 2 : 1}, minmax(0, 1fr))`}
+        role="tablist"
+        aria-label={t.book.tableOfContents}
+      >
+        <button
+          id="book-chapters-tab"
+          type="button"
+          class="book-dialog-tab active"
+          role="tab"
+          aria-selected="true"
+          aria-controls="book-chapters-panel"
+          data-book-tab="chapters"
+        >
+          {t.book.chapters}
+        </button>
+        {
+          headings.length > 0 && (
+            <button
+              id="book-page-tab"
+              type="button"
+              class="book-dialog-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="book-page-panel"
+              tabindex="-1"
+              data-book-tab="page"
+            >
+              {t.book.onThisPage}
+            </button>
+          )
+        }
+      </div>
+
+      <div class="book-dialog-panels">
+        <div
+          id="book-chapters-panel"
+          class="book-dialog-panel p-3"
+          role="tabpanel"
+          aria-labelledby="book-chapters-tab"
+          data-book-panel="chapters"
+        >
+          <BookChapterNav
+            {bookSlug}
+            {sidebar}
+            {currentSlug}
+            {titleMap}
+            variant="mobile"
+          />
+        </div>
+
+        {
+          headings.length > 0 && (
+            <div
+              id="book-page-panel"
+              class="book-dialog-panel p-3"
+              role="tabpanel"
+              aria-labelledby="book-page-tab"
+              data-book-panel="page"
+              hidden
+            >
+              <nav aria-label={t.book.onThisPage}>
+                <ul class="border-s border-border text-sm">
+                  {headings.map(({ depth, slug, text }) => {
+                    const indent = depth - minDepth;
+                    return (
+                      <li
+                        class="book-page-item"
+                        style={`padding-inline-start: ${indent * 0.75 + 0.5}rem`}
+                      >
+                        <a
+                          href={`#${slug}`}
+                          class="book-page-link flex min-h-11 items-center rounded-e-md border-s-2 border-transparent px-2 py-2 leading-5 text-foreground/65 transition-colors hover:bg-foreground/5 hover:text-accent"
+                          data-book-heading={slug}
+                        >
+                          <span class="book-page-label">{text}</span>
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<script is:inline data-astro-rerun>
+  (function () {
+    const root = document.querySelector("[data-book-mobile-nav]");
+    if (!root) return;
+    root.__bookMobileNavCleanup?.();
+    const controller = new AbortController();
+
+    const openButton = root.querySelector("[data-book-nav-open]");
+    const closeButton = root.querySelector("[data-book-nav-close]");
+    const dialog = root.querySelector("[data-book-nav-dialog]");
+    const tabs = Array.from(root.querySelectorAll("[data-book-tab]"));
+    const panels = Array.from(root.querySelectorAll("[data-book-panel]"));
+    const headingLinks = Array.from(
+      root.querySelectorAll("[data-book-heading]")
+    );
+
+    if (!openButton || !closeButton || !dialog) return;
+
+    let activeTab = "chapters";
+    let previousOverflow = "";
+    let frameId = 0;
+    const visibleMedia = window.matchMedia("(max-width: 1023px)");
+
+    function setTab(name, moveFocus) {
+      activeTab = name;
+      tabs.forEach(function (tab) {
+        const selected = tab.getAttribute("data-book-tab") === name;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.setAttribute("tabindex", selected ? "0" : "-1");
+        tab.classList.toggle("active", selected);
+        if (selected && moveFocus) tab.focus();
+      });
+      panels.forEach(function (panel) {
+        panel.hidden = panel.getAttribute("data-book-panel") !== name;
+      });
+
+      requestAnimationFrame(function () {
+        const panel = root.querySelector(
+          `[data-book-panel="${name}"]:not([hidden])`
+        );
+        const active =
+          name === "chapters"
+            ? panel?.querySelector("[data-current-chapter='true']")
+            : panel?.querySelector(".book-page-link.active");
+        active?.scrollIntoView({ block: "nearest" });
+      });
+    }
+
+    function scheduleActiveHeading() {
+      if (!visibleMedia.matches || frameId) return;
+      frameId = window.requestAnimationFrame(function () {
+        frameId = 0;
+        setActiveHeading();
+      });
+    }
+
+    function lockScroll() {
+      previousOverflow = document.documentElement.style.overflow;
+      document.documentElement.style.overflow = "hidden";
+    }
+
+    function unlockScroll() {
+      document.documentElement.style.overflow = previousOverflow;
+    }
+
+    function openDialog() {
+      if (dialog.open) return;
+      setActiveHeading();
+      lockScroll();
+      dialog.showModal();
+      openButton.setAttribute("aria-expanded", "true");
+      setTab(activeTab, false);
+      requestAnimationFrame(function () {
+        const activeItem =
+          activeTab === "chapters"
+            ? dialog.querySelector("[data-current-chapter='true']")
+            : dialog.querySelector(".book-page-link.active");
+        (activeItem || closeButton).focus();
+        activeItem?.scrollIntoView({ block: "nearest" });
+      });
+    }
+
+    function closeDialog(restoreFocus) {
+      if (dialog.open) dialog.close();
+      unlockScroll();
+      openButton.setAttribute("aria-expanded", "false");
+      if (restoreFocus) openButton.focus();
+    }
+
+    function setActiveHeading() {
+      const article = document.getElementById("article");
+      const articleHeadings = article
+        ? Array.from(article.querySelectorAll("h2, h3, h4"))
+        : [];
+      let currentId = articleHeadings[0]?.id || "";
+      articleHeadings.forEach(function (heading) {
+        if (heading.getBoundingClientRect().top <= 72) {
+          currentId = heading.id;
+        }
+      });
+      headingLinks.forEach(function (link) {
+        const active = link.getAttribute("data-book-heading") === currentId;
+        link.classList.toggle("active", active);
+        if (active) {
+          link.setAttribute("aria-current", "location");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    }
+
+    openButton.addEventListener("click", openDialog, {
+      signal: controller.signal,
+    });
+    closeButton.addEventListener(
+      "click",
+      function () {
+        closeDialog(true);
+      },
+      { signal: controller.signal }
+    );
+    dialog.addEventListener(
+      "click",
+      function (event) {
+        if (event.target === dialog) closeDialog(true);
+      },
+      { signal: controller.signal }
+    );
+    dialog.addEventListener(
+      "close",
+      function () {
+        if (dialog.open) return;
+        unlockScroll();
+        openButton.setAttribute("aria-expanded", "false");
+      },
+      { signal: controller.signal }
+    );
+
+    tabs.forEach(function (tab, index) {
+      tab.addEventListener(
+        "click",
+        function () {
+          setTab(tab.getAttribute("data-book-tab"), false);
+        },
+        { signal: controller.signal }
+      );
+      tab.addEventListener(
+        "keydown",
+        function (event) {
+          let nextIndex = index;
+          if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+          if (event.key === "ArrowLeft")
+            nextIndex = (index - 1 + tabs.length) % tabs.length;
+          if (event.key === "Home") nextIndex = 0;
+          if (event.key === "End") nextIndex = tabs.length - 1;
+          if (nextIndex !== index) {
+            event.preventDefault();
+            setTab(tabs[nextIndex].getAttribute("data-book-tab"), true);
+          }
+        },
+        { signal: controller.signal }
+      );
+    });
+
+    dialog.querySelectorAll("a").forEach(function (link) {
+      link.addEventListener(
+        "click",
+        function () {
+          closeDialog(false);
+        },
+        { signal: controller.signal }
+      );
+    });
+
+    window.addEventListener("scroll", scheduleActiveHeading, {
+      passive: true,
+      signal: controller.signal,
+    });
+    visibleMedia.addEventListener("change", scheduleActiveHeading, {
+      signal: controller.signal,
+    });
+    scheduleActiveHeading();
+
+    function cleanup() {
+      if (frameId) window.cancelAnimationFrame(frameId);
+      controller.abort();
+      closeDialog(false);
+    }
+
+    root.__bookMobileNavCleanup = cleanup;
+
+    document.addEventListener("astro:before-swap", cleanup, {
+      once: true,
+      signal: controller.signal,
+    });
+  })();
+</script>
+
+<style>
+  .book-mobile-nav {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    height: 3.25rem;
+  }
+  .book-mobile-bar {
+    height: 3.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--background);
+  }
+  .book-mobile-dialog {
+    position: fixed;
+    inset: auto 0 0;
+    width: min(100%, 42rem);
+    max-width: none;
+    max-height: 72dvh;
+    margin: auto auto 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 1rem 1rem 0 0;
+    color: var(--foreground);
+    background: var(--background);
+    box-shadow: 0 -12px 40px color-mix(in srgb, #000 22%, transparent);
+  }
+  .book-mobile-dialog::backdrop {
+    background: color-mix(in srgb, #000 42%, transparent);
+  }
+  .book-mobile-dialog[open] {
+    animation: book-dialog-in 0.2s ease-out;
+  }
+  .book-dialog-shell {
+    display: flex;
+    max-height: 72dvh;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .book-dialog-handle {
+    width: 2.25rem;
+    height: 0.25rem;
+    margin: 0.5rem auto 0.125rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--foreground) 20%, transparent);
+  }
+  .book-dialog-title,
+  .book-page-label {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .book-dialog-tab {
+    position: relative;
+    min-width: 0;
+    min-height: 2.75rem;
+    color: color-mix(in srgb, var(--foreground) 55%, transparent);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease;
+  }
+  .book-dialog-tab:hover {
+    color: var(--foreground);
+    background: color-mix(in srgb, var(--foreground) 3%, transparent);
+  }
+  .book-dialog-tab.active {
+    color: var(--accent);
+  }
+  .book-dialog-tab.active::after {
+    position: absolute;
+    inset-inline: 25%;
+    bottom: -1px;
+    height: 2px;
+    content: "";
+    background: var(--accent);
+  }
+  .book-dialog-panels {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .book-dialog-panel[hidden] {
+    display: none;
+  }
+  .book-page-link.active {
+    margin-inline-start: -1px;
+    border-inline-start-color: var(--accent);
+    color: var(--foreground);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    font-weight: 600;
+  }
+  @keyframes book-dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .book-mobile-dialog[open] {
+      animation: none;
+    }
+  }
+</style>

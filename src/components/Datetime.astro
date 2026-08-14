@@ -4,6 +4,9 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import IconCalendar from "@/assets/icons/IconCalendar.svg";
 import config from "@/config";
+import { useTranslations } from "@/i18n";
+
+const t = useTranslations(config.site.lang);
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -31,7 +34,12 @@ const datetime = dayjs(isModified ? modDatetime : pubDatetime).tz(
   postTimezone || config.site.timezone
 );
 
-const date = datetime.format("D MMM, YYYY"); // e.g., '22 Mar, 2025'
+const date = new Intl.DateTimeFormat(config.site.lang, {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  timeZone: postTimezone || config.site.timezone,
+}).format(datetime.toDate());
 ---
 
 <div class:list={["flex items-center gap-x-2 opacity-80", className]}>
@@ -44,7 +52,7 @@ const date = datetime.format("D MMM, YYYY"); // e.g., '22 Mar, 2025'
   {
     isModified && (
       <span class:list={["text-sm", { "sm:text-base": size === "lg" }]}>
-        Updated:
+        {t.post.updatedAt}:
       </span>
     )
   }

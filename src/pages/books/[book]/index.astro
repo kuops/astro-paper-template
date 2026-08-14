@@ -22,14 +22,14 @@ export async function getStaticPaths() {
     if (!chapter) continue;
     paths.push({
       params: { book: book.slug },
-      props: { chapter, entries, slug: firstSlug },
+      props: { chapter, entries, slug: firstSlug, bookTitle: book.title },
     });
   }
 
   return paths;
 }
 
-const { chapter, entries, slug } = Astro.props;
+const { chapter, entries, slug, bookTitle } = Astro.props;
 const { book } = Astro.params;
 
 const sidebar = buildSidebar(book!, entries);
@@ -45,6 +45,7 @@ const nextSlug =
 <BookChapterContent
   {chapter}
   book={book!}
+  {bookTitle}
   {slug}
   {sidebar}
   {titleMap}

@@ -32,11 +32,9 @@
 
 ## 字体（Fonts）
 
-通过 Astro `experimental.fonts` 在 `astro.config.ts` 中加载两套字体：
-- Google Sans Code（英文与代码块）— fallback 使用 `sans-serif`，不要改成 `monospace`，否则 Noto Sans SC 无法正常处理中日韩字符
-- Noto Sans SC（中文）— fallback 使用 `sans-serif`
+通过 Astro Fonts API 在 `astro.config.ts` 中自托管 Google Sans Code，使用 WOFF2 和 `font-display: optional`。字体 provider 不添加 generic fallback，由全局字体栈继续处理中文。生产构建会把各字重合并为正常体和斜体两个可变字体文件，两者都要预加载；极慢首访若字体未赶上首屏，则本次页面保持 fallback，不在显示后交换字体。
 
-字体栈为 `var(--font-google-sans-code), var(--font-noto-sans-sc), sans-serif`。不要给 Google Sans Code 追加 `monospace` fallback，否则中文会退回到系统等宽字体。
+页面和代码都优先使用 Google Sans Code，中文依次回退到本机的 Noto Sans SC、PingFang SC 或 Microsoft YaHei。不要引入完整的 Noto Sans SC Web Font，也不要在字体加载期间隐藏整个页面；完整中文字库会显著增加传输和构建体积，而整页门控会造成刷新白屏。
 
 ## 路径别名（Path aliases）
 

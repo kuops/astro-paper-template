@@ -68,6 +68,8 @@ export interface UIStrings {
     searchHintNavigate: string;
     searchHintOpen: string;
     searchHintClose: string;
+    clearSearch: string;
+    headingAnchor: string;
   };
   notFound: {
     title: string;
@@ -79,6 +81,14 @@ export interface UIStrings {
     nextChapter: string;
     tableOfContents: string;
     chapterNav: string;
+    backToBooks: string;
+    openChapterNav: string;
+    closeChapterNav: string;
+    chapters: string;
+    onThisPage: string;
+    chapterProgress: string;
+    allChapters: string;
+    startReading: string;
   };
   booksPage: {
     title: string;

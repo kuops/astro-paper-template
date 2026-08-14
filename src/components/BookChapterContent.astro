@@ -12,6 +12,7 @@ const t = useTranslations(config.site.lang);
 interface Props {
   chapter: CollectionEntry<"books">;
   book: string;
+  bookTitle: string;
   slug: string;
   sidebar: SidebarGroup[];
   titleMap: Record<string, string>;
@@ -19,8 +20,16 @@ interface Props {
   nextSlug: string | null;
 }
 
-const { chapter, book, slug, sidebar, titleMap, prevSlug, nextSlug } =
-  Astro.props;
+const {
+  chapter,
+  book,
+  bookTitle,
+  slug,
+  sidebar,
+  titleMap,
+  prevSlug,
+  nextSlug,
+} = Astro.props;
 
 const { Content, headings: allHeadings } = await render(chapter);
 const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
@@ -29,6 +38,7 @@ const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
 <BookLayout
   title={chapter.data.title}
   description={chapter.data.description}
+  {bookTitle}
   bookSlug={book}
   {sidebar}
   currentSlug={slug}
@@ -39,42 +49,72 @@ const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
 
   <hr class="my-8 border-dashed" />
 
-  <div data-pagefind-ignore class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+  <div data-pagefind-ignore class="grid grid-cols-2 gap-3 sm:gap-6">
     {
       prevSlug ? (
         <a
           href={`/books/${book}/${prevSlug}`}
-          class="flex w-full gap-1 hover:opacity-75"
+          class="flex min-h-14 w-full min-w-0 items-center gap-1 rounded-md py-2 hover:opacity-75"
         >
           <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
-          <div>
+          <div class="min-w-0">
             <span class="text-sm text-foreground/60">
               {t.book.previousChapter}
             </span>
-            <div class="text-sm font-medium text-accent">
+            <div class="truncate text-sm font-medium text-accent">
               {titleMap[prevSlug] || prevSlug}
             </div>
           </div>
         </a>
       ) : (
-        <div />
+        nextSlug && (
+          <a
+            href="/books"
+            class="flex min-h-14 w-full min-w-0 items-center gap-1 rounded-md py-2 hover:opacity-75"
+          >
+            <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
+            <span class="text-sm font-medium text-accent">
+              {t.book.backToBooks}
+            </span>
+          </a>
+        )
       )
     }
     {
       nextSlug ? (
         <a
           href={`/books/${book}/${nextSlug}`}
-          class="flex w-full justify-end gap-1 text-end hover:opacity-75"
+          class="flex min-h-14 w-full min-w-0 items-center justify-end gap-1 rounded-md py-2 text-end hover:opacity-75"
         >
-          <div>
+          <div class="min-w-0">
             <span class="text-sm text-foreground/60">{t.book.nextChapter}</span>
-            <div class="text-sm font-medium text-accent">
+            <div class="truncate text-sm font-medium text-accent">
               {titleMap[nextSlug] || nextSlug}
             </div>
           </div>
           <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
         </a>
-      ) : null
+      ) : prevSlug ? (
+        <a
+          href="/books"
+          class="flex min-h-14 w-full min-w-0 items-center justify-end gap-1 rounded-md py-2 text-end hover:opacity-75"
+        >
+          <span class="text-sm font-medium text-accent">
+            {t.book.backToBooks}
+          </span>
+          <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
+        </a>
+      ) : (
+        <a
+          href="/books"
+          class="col-span-2 flex min-h-14 w-full items-center justify-center gap-1 rounded-md py-2 hover:opacity-75"
+        >
+          <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
+          <span class="text-sm font-medium text-accent">
+            {t.book.backToBooks}
+          </span>
+        </a>
+      )
     }
   </div>
 </BookLayout>

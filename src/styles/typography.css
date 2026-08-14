@@ -17,10 +17,6 @@
       @apply text-foreground;
     }
 
-    h3 {
-      @apply italic;
-    }
-
     p,
     strong,
     ol,
@@ -121,6 +117,14 @@
 
   html[data-theme="dark"] .astro-code {
     @apply bg-(--shiki-dark-bg) text-(--shiki-dark) [&_span]:text-(--shiki-dark);
+  }
+
+  html[data-theme="dark"] .astro-code span {
+    color: color-mix(
+      in srgb,
+      var(--shiki-dark, var(--foreground)) 80%,
+      white 20%
+    );
   }
 
   .astro-code {
