@@ -90,9 +90,9 @@ const readingLabel = tplStr(contentT.reading.metadata, {
       prevSlug ? (
         <a
           href={hrefMap[prevSlug]}
-          class="flex min-h-14 w-full min-w-0 items-center gap-1 rounded-md py-2 hover:opacity-75"
+          class="group flex min-h-14 w-full min-w-0 items-center gap-1 rounded-md py-2 hover:opacity-75"
         >
-          <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
+          <IconChevronLeft class="inline-block flex-none motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:-translate-x-0.5 rtl:rotate-180" />
           <div class="min-w-0">
             <span class="text-sm text-foreground/60">
               {t.book.previousChapter}
@@ -106,9 +106,9 @@ const readingLabel = tplStr(contentT.reading.metadata, {
         nextSlug && (
           <a
             href={getLocalizedPath("/books", locale)}
-            class="flex min-h-14 w-full min-w-0 items-center gap-1 rounded-md py-2 hover:opacity-75"
+            class="group flex min-h-14 w-full min-w-0 items-center gap-1 rounded-md py-2 hover:opacity-75"
           >
-            <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
+            <IconChevronLeft class="inline-block flex-none motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:-translate-x-0.5 rtl:rotate-180" />
             <span class="text-sm font-medium text-accent">
               {t.book.backToBooks}
             </span>
@@ -120,7 +120,7 @@ const readingLabel = tplStr(contentT.reading.metadata, {
       nextSlug ? (
         <a
           href={hrefMap[nextSlug]}
-          class="flex min-h-14 w-full min-w-0 items-center justify-end gap-1 rounded-md py-2 text-end hover:opacity-75"
+          class="group flex min-h-14 w-full min-w-0 items-center justify-end gap-1 rounded-md py-2 text-end hover:opacity-75"
         >
           <div class="min-w-0">
             <span class="text-sm text-foreground/60">{t.book.nextChapter}</span>
@@ -128,24 +128,24 @@ const readingLabel = tplStr(contentT.reading.metadata, {
               {titleMap[nextSlug] || nextSlug}
             </div>
           </div>
-          <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
+          <IconChevronRight class="inline-block flex-none motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:translate-x-0.5 rtl:rotate-180" />
         </a>
       ) : prevSlug ? (
         <a
           href={getLocalizedPath("/books", locale)}
-          class="flex min-h-14 w-full min-w-0 items-center justify-end gap-1 rounded-md py-2 text-end hover:opacity-75"
+          class="group flex min-h-14 w-full min-w-0 items-center justify-end gap-1 rounded-md py-2 text-end hover:opacity-75"
         >
           <span class="text-sm font-medium text-accent">
             {t.book.backToBooks}
           </span>
-          <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
+          <IconChevronRight class="inline-block flex-none motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:translate-x-0.5 rtl:rotate-180" />
         </a>
       ) : (
         <a
           href={getLocalizedPath("/books", locale)}
-          class="col-span-2 flex min-h-14 w-full items-center justify-center gap-1 rounded-md py-2 hover:opacity-75"
+          class="group col-span-2 flex min-h-14 w-full items-center justify-center gap-1 rounded-md py-2 hover:opacity-75"
         >
-          <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
+          <IconChevronLeft class="inline-block flex-none motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:-translate-x-0.5 rtl:rotate-180" />
           <span class="text-sm font-medium text-accent">
             {t.book.backToBooks}
           </span>
