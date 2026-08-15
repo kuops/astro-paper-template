@@ -13,6 +13,7 @@ import {
 } from "@/i18n";
 import type { Locale } from "@/types/config";
 import { getContentLocale } from "@/utils/localizedContent";
+import { getReadingMetadata } from "@/utils/readingMetadata";
 const locale = getLocaleFromPath(Astro.url.pathname);
 const t = useTranslations(locale);
 
@@ -51,9 +52,15 @@ const {
 const { Content, headings: allHeadings } = await render(chapter);
 const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
 const sourceLocale = getContentLocale(chapter, "books");
+const contentT = useTranslations(sourceLocale);
 const isFallback = sourceLocale !== locale;
 const sourceLabel = tplStr(t.language.sourceLabel, {
   language: t.language.names[sourceLocale],
+});
+const readingMetadata = getReadingMetadata(chapter.body, sourceLocale);
+const readingLabel = tplStr(contentT.reading.metadata, {
+  count: readingMetadata.count,
+  minutes: readingMetadata.minutes,
 });
 ---
 
@@ -69,10 +76,11 @@ const sourceLabel = tplStr(t.language.sourceLabel, {
   {hrefMap}
   {sourceLocaleMap}
   {headings}
+  {readingLabel}
+  sourceLabel={isFallback ? sourceLabel : undefined}
   indexable={indexable}
   {alternateUrl}
 >
-  {isFallback && <p class="mb-3 text-sm text-foreground/55">{sourceLabel}</p>}
   <Content />
 
   <hr class="my-8 border-dashed" />

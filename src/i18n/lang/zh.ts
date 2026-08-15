@@ -1,6 +1,9 @@
 import type { UIStrings } from "../types";
 
 export default {
+  reading: {
+    metadata: "约 {{minutes}} 分钟 · {{count}} 字",
+  },
   language: {
     switchLanguage: "切换语言",
     names: {

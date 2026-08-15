@@ -1,4 +1,7 @@
 export interface UIStrings {
+  reading: {
+    metadata: string;
+  };
   language: {
     switchLanguage: string;
     names: {

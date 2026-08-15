@@ -18,6 +18,7 @@ import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
 import ArticleEnhancements from "@/components/ArticleEnhancements.astro";
 import MermaidRenderer from "@/components/MermaidRenderer.astro";
 import ImageLightbox from "@/components/ImageLightbox.astro";
+import ReadingMetadata from "@/components/ReadingMetadata.astro";
 import config from "@/config";
 import {
   getLocaleFromPath,
@@ -27,6 +28,7 @@ import {
 } from "@/i18n";
 import type { Locale } from "@/types/config";
 import { getContentLocale } from "@/utils/localizedContent";
+import { getReadingMetadata } from "@/utils/readingMetadata";
 const locale = getLocaleFromPath(Astro.url.pathname);
 const t = useTranslations(locale);
 
@@ -40,6 +42,7 @@ type Props = {
 
 const { post, prevPost, nextPost, alternateUrl, alternateURLs } = Astro.props;
 const sourceLocale = getContentLocale(post, "blog");
+const contentT = useTranslations(sourceLocale);
 const isFallback = sourceLocale !== locale;
 const sourceLabel = tplStr(t.language.sourceLabel, {
   language: t.language.names[sourceLocale],
@@ -59,6 +62,11 @@ const {
 } = post.data;
 
 const { Content, headings: allHeadings } = await render(post);
+const readingMetadata = getReadingMetadata(post.body, sourceLocale);
+const readingLabel = tplStr(contentT.reading.metadata, {
+  count: readingMetadata.count,
+  minutes: readingMetadata.minutes,
+});
 
 const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
 
@@ -123,8 +131,9 @@ const layoutProps = {
         >
           {title}
         </h1>
-        <div class="my-2 flex items-center gap-2">
+        <div class="my-2 flex flex-wrap items-center gap-x-3 gap-y-1">
           <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
+          <ReadingMetadata label={readingLabel} />
           <span
             aria-hidden="true"
             class:list={[

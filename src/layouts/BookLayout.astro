@@ -9,6 +9,7 @@ import BackToTopButton from "@/components/BackToTopButton.astro";
 import ArticleEnhancements from "@/components/ArticleEnhancements.astro";
 import MermaidRenderer from "@/components/MermaidRenderer.astro";
 import ImageLightbox from "@/components/ImageLightbox.astro";
+import ReadingMetadata from "@/components/ReadingMetadata.astro";
 import config from "@/config";
 import type { SidebarGroup } from "@/types/books";
 import type { Locale } from "@/types/config";
@@ -24,6 +25,8 @@ type Props = {
   hrefMap: Record<string, string>;
   sourceLocaleMap?: Record<string, Locale>;
   headings: { depth: number; slug: string; text: string }[];
+  readingLabel?: string;
+  sourceLabel?: string;
   indexable?: boolean;
   alternateUrl?: string;
   canonicalURL?: string;
@@ -40,6 +43,8 @@ const {
   hrefMap,
   sourceLocaleMap,
   headings,
+  readingLabel,
+  sourceLabel,
   indexable = true,
   alternateUrl,
   canonicalURL,
@@ -92,6 +97,19 @@ const {
         >
           {title}
         </h1>
+        {
+          (sourceLabel || readingLabel) && (
+            <div class="mb-8 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-foreground/60">
+              {sourceLabel && <span>{sourceLabel}</span>}
+              {sourceLabel && readingLabel && (
+                <span aria-hidden="true" class="text-foreground/40">
+                  ·
+                </span>
+              )}
+              {readingLabel && <ReadingMetadata label={readingLabel} />}
+            </div>
+          )
+        }
         <article
           id="article"
           class="app-prose w-full max-w-none prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"
