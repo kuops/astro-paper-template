@@ -1,0 +1,113 @@
+---
+title: "MDX Feature Test"
+pubDatetime: 2026-05-18
+description: "Testing MDX integration features, including JSX expressions, variables, conditions, and styled components."
+tags: ["test"]
+---
+
+This post verifies that the blog's MDX support works correctly. MDX allows mixing JSX syntax into Markdown content.
+
+## Standard Markdown
+
+MDX is fully compatible with standard Markdown syntax: **bold**, _italic_, `inline code`, and [links](https://astro.build/).
+
+## Variables and Expressions
+
+MDX lets you define variables below the frontmatter and reference them in the content:
+
+export const siteName = "My Blog";
+export const year = new Date().getFullYear();
+export const posts = ["Hello World", "MDX Test", "Astro Guide"];
+
+Current site: **{siteName}**, current year: **{year}**.
+
+export const product = 2 * 3;
+
+Math operations: 2 × 3 = {product}, and the array length is {posts.length}.
+
+## Conditional Rendering
+
+export const showAdvanced = true;
+
+{showAdvanced ? (
+
+  <div style={{ padding: "1rem", border: "1px solid var(--color-border)", borderRadius: "8px", margin: "1rem 0", color: "var(--color-foreground)" }}>
+    <strong>Advanced content enabled</strong> — this block is rendered through a JSX conditional.
+  </div>
+) : (
+  <p>Advanced content is hidden.</p>
+)}
+
+## List Rendering
+
+Generate lists dynamically with JSX `map`:
+
+<ul style={{ paddingLeft: "1.5rem" }}>
+  {posts.map((post, i) => (
+    <li key={i}>
+      {i + 1}. {post}
+    </li>
+  ))}
+</ul>
+
+## Styled Components
+
+export const Badge = ({ children, color = "#006cac" }) => (
+  <span
+    style={{
+      display: "inline-block",
+      padding: "0.2rem 0.6rem",
+      borderRadius: "9999px",
+      fontSize: "0.85rem",
+      backgroundColor: color,
+      color: "#fff",
+      marginRight: "0.4rem",
+    }}
+  >
+    {children}
+  </span>
+);
+
+<Badge>Astro</Badge> <Badge color="#38bdf8">Tailwind</Badge>
+<Badge color="#e11d48">MDX</Badge>
+
+## Table Data
+
+export const features = [
+  { name: "MDX support", status: "✅", note: "Use JSX inside Markdown" },
+  {
+    name: "Variables",
+    status: "✅",
+    note: "export const + inline expressions",
+  },
+  {
+    name: "Conditionals",
+    status: "✅",
+    note: "Ternary operators control display",
+  },
+  { name: "Lists", status: "✅", note: "Generated dynamically via map" },
+  { name: "Styled components", status: "✅", note: "Reusable JSX components" },
+];
+
+<table style={{ width: "100%", borderCollapse: "collapse", margin: "1rem 0" }}>
+  <thead>
+    <tr style={{ borderBottom: "2px solid #666" }}>
+      <th style={{ textAlign: "left", padding: "0.5rem" }}>Feature</th>
+      <th style={{ textAlign: "center", padding: "0.5rem" }}>Status</th>
+      <th style={{ textAlign: "left", padding: "0.5rem" }}>Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    {features.map((f, i) => (
+      <tr key={i} style={{ borderBottom: "1px solid #ddd" }}>
+        <td style={{ padding: "0.5rem" }}>{f.name}</td>
+        <td style={{ textAlign: "center", padding: "0.5rem" }}>{f.status}</td>
+        <td style={{ padding: "0.5rem" }}>{f.note}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+## Summary
+
+If everything above (variables, conditional rendering, lists, styled components, dynamic tables) displays correctly, MDX integration is fully working. You can now use JSX inside `.mdx` files to enhance your posts.

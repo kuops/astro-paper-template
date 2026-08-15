@@ -8,9 +8,12 @@ import {
   isBookIndex,
   isGroupIndex,
   buildHrefMap,
+  buildSourceLocaleMap,
   getChapterSlug,
 } from "@/utils/books";
 import BookChapterContent from "@/components/BookChapterContent.astro";
+import config from "@/config";
+import { getLocalizedPath } from "@/i18n";
 
 export async function getStaticPaths() {
   const books = await getAllBooks();
@@ -40,12 +43,20 @@ const { book, slug } = Astro.params;
 const sidebar = buildSidebar(book!, entries);
 const titleMap = buildTitleMap(entries, book!);
 const hrefMap = buildHrefMap(entries, book!);
+const sourceLocaleMap = buildSourceLocaleMap(entries, book!);
 
 const flatItems = getFlatItems(sidebar);
 const currentIndex = flatItems.indexOf(slug!);
 const prevSlug = currentIndex > 0 ? flatItems[currentIndex - 1] : null;
 const nextSlug =
   currentIndex < flatItems.length - 1 ? flatItems[currentIndex + 1] : null;
+
+const alternateLocale = config.i18n.locales.find(
+  locale => locale !== config.site.lang
+);
+const alternateUrl = alternateLocale
+  ? getLocalizedPath(`/books/${book}/${slug}`, alternateLocale)
+  : undefined;
 ---
 
 <BookChapterContent
@@ -56,6 +67,8 @@ const nextSlug =
   {sidebar}
   {titleMap}
   {hrefMap}
+  {sourceLocaleMap}
   {prevSlug}
   {nextSlug}
+  {alternateUrl}
 />

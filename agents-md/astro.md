@@ -36,7 +36,7 @@
 
 `astro-paper.config.ts` 中的 `site.lang` 是默认语言，`i18n.locales` 是启用语言列表。当前支持 `zh` 和 `en`。默认语言内容保留在 collection 根目录，其他语言放在 `src/data/<collection>/<locale>/` 下；相同相对路径自动配对，也可使用可选的 `translationKey` 显式配对。
 
-列表页优先显示当前语言译文。没有译文时显示原文语言标记并直接链接原文，不在目标语言前缀下复制正文。修改路由或内容工具时必须同时验证默认语言 URL、locale 前缀 URL、fallback 链接和 `hreflang`。
+列表页和详情页优先显示当前语言译文。没有译文时在目标语言前缀下生成原文 fallback，显示原文语言标记，并将 canonical 指向原语言 URL。修改路由或内容工具时必须同时验证默认语言 URL、locale 前缀 URL、fallback 链接和 `hreflang`。
 
 ## 字体（Fonts）
 

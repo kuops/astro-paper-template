@@ -4,7 +4,12 @@ import type { Locale } from "@/types/config";
 import { getPath } from "@/utils/getPath";
 import { getContentLocale } from "@/utils/localizedContent";
 import { toTransitionName } from "@/utils/toTransitionName";
-import { getLocaleFromPath, tplStr, useTranslations } from "@/i18n";
+import {
+  getLocaleFromPath,
+  getLocalizedPath,
+  tplStr,
+  useTranslations,
+} from "@/i18n";
 import Datetime from "./Datetime.astro";
 
 type Props = {
@@ -31,7 +36,7 @@ const sourceLabel = tplStr(t.language.sourceLabel, {
 
 <li class="my-6">
   <a
-    href={getPath(id, filePath)}
+    href={getLocalizedPath(getPath(id, filePath), requestedLocale)}
     class:list={[
       "inline-block text-lg font-medium text-accent",
       "decoration-dashed underline-offset-4 hover:underline",

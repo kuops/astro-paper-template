@@ -1,6 +1,7 @@
 ---
 import type { SidebarGroup } from "@/types/books";
 import { getLocaleFromPath, getLocalizedPath, useTranslations } from "@/i18n";
+import type { Locale } from "@/types/config";
 
 const locale = getLocaleFromPath(Astro.url.pathname);
 const t = useTranslations(locale);
@@ -11,6 +12,7 @@ type Props = {
   currentSlug: string;
   titleMap?: Record<string, string>;
   hrefMap: Record<string, string>;
+  sourceLocaleMap?: Record<string, Locale>;
   variant?: "desktop" | "mobile";
 };
 
@@ -20,6 +22,7 @@ const {
   currentSlug,
   titleMap = {},
   hrefMap,
+  sourceLocaleMap = {},
   variant = "desktop",
 } = Astro.props;
 ---
@@ -36,7 +39,7 @@ const {
         const href =
           hrefMap[item] ??
           getLocalizedPath(`/books/${bookSlug}/${item}`, locale);
-        const sourceLocale = getLocaleFromPath(href);
+        const sourceLocale = sourceLocaleMap[item] ?? getLocaleFromPath(href);
         const isFallback = sourceLocale !== locale;
         const isCurrent = currentSlug === item;
         const label = titleMap[item] || item;

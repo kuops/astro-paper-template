@@ -10,6 +10,7 @@ import {
   useTranslations,
 } from "@/i18n";
 import type { SidebarGroup } from "@/types/books";
+import type { Locale } from "@/types/config";
 import { getFlatItems } from "@/utils/books";
 
 const locale = getLocaleFromPath(Astro.url.pathname);
@@ -22,6 +23,7 @@ type Props = {
   currentSlug: string;
   titleMap: Record<string, string>;
   hrefMap: Record<string, string>;
+  sourceLocaleMap?: Record<string, Locale>;
   headings: { depth: number; slug: string; text: string }[];
 };
 
@@ -32,6 +34,7 @@ const {
   currentSlug,
   titleMap,
   hrefMap,
+  sourceLocaleMap,
   headings,
 } = Astro.props;
 const flatItems = getFlatItems(sidebar);
@@ -161,6 +164,7 @@ const minDepth =
             {currentSlug}
             {titleMap}
             {hrefMap}
+            {sourceLocaleMap}
             variant="mobile"
           />
         </div>

@@ -62,7 +62,7 @@ export async function getAllBooks(
         title: e.data.title,
         description: e.data.description,
         order: e.data.order ?? 0,
-        href: getLocalizedPath(`/books/${slug}`, sourceLocale),
+        href: getLocalizedPath(`/books/${slug}`, locale),
         sourceLocale,
       };
     })
@@ -200,7 +200,11 @@ export function getChapterEntry(
   );
 }
 
-export function buildHrefMap(entries: BookEntry[], bookSlug: string) {
+export function buildHrefMap(
+  entries: BookEntry[],
+  bookSlug: string,
+  locale: Locale = config.site.lang
+) {
   const map: Record<string, string> = {};
 
   for (const entry of entries) {
@@ -213,11 +217,28 @@ export function buildHrefMap(entries: BookEntry[], bookSlug: string) {
     }
 
     const relativePath = getRelativePath(entry);
-    const locale = getContentLocale(entry, "books");
     map[relativePath] = getLocalizedPath(
       `/books/${bookSlug}/${relativePath}`,
       locale
     );
+  }
+
+  return map;
+}
+
+export function buildSourceLocaleMap(entries: BookEntry[], bookSlug: string) {
+  const map: Record<string, Locale> = {};
+
+  for (const entry of entries) {
+    if (
+      isBookIndex(entry) ||
+      isGroupIndex(entry) ||
+      getBookSlug(entry) !== bookSlug
+    ) {
+      continue;
+    }
+
+    map[getRelativePath(entry)] = getContentLocale(entry, "books");
   }
 
   return map;

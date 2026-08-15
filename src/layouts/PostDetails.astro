@@ -19,9 +19,16 @@ import ArticleEnhancements from "@/components/ArticleEnhancements.astro";
 import MermaidRenderer from "@/components/MermaidRenderer.astro";
 import ImageLightbox from "@/components/ImageLightbox.astro";
 import config from "@/config";
-import { getLocaleFromPath, useTranslations } from "@/i18n";
+import {
+  getLocaleFromPath,
+  getLocalizedPath,
+  tplStr,
+  useTranslations,
+} from "@/i18n";
 import type { Locale } from "@/types/config";
-const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
+import { getContentLocale } from "@/utils/localizedContent";
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
 
 type Props = {
   post: CollectionEntry<"blog">;
@@ -32,6 +39,11 @@ type Props = {
 };
 
 const { post, prevPost, nextPost, alternateUrl, alternateURLs } = Astro.props;
+const sourceLocale = getContentLocale(post, "blog");
+const isFallback = sourceLocale !== locale;
+const sourceLabel = tplStr(t.language.sourceLabel, {
+  language: t.language.names[sourceLocale],
+});
 
 const {
   title,
@@ -75,7 +87,12 @@ const layoutProps = {
   description,
   pubDatetime,
   modDatetime,
-  canonicalURL,
+  canonicalURL: isFallback
+    ? new URL(
+        getLocalizedPath(getPath(post.id, post.filePath), sourceLocale),
+        Astro.url
+      ).href
+    : canonicalURL,
   ogImage,
   scrollSmooth: true,
   alternateURLs,
@@ -95,6 +112,11 @@ const layoutProps = {
     <BackButton />
     <div class="flex gap-8">
       <div class="min-w-0 flex-1">
+        {
+          isFallback && (
+            <p class="mb-3 text-sm text-foreground/55">{sourceLabel}</p>
+          )
+        }
         <h1
           transition:name={slugifyStr(title.replaceAll(".", "-"))}
           class="inline-block text-[1.75rem] leading-9 font-bold text-accent sm:text-3xl"
@@ -151,7 +173,10 @@ const layoutProps = {
       {
         prevPost && (
           <a
-            href={getPath(prevPost.id, prevPost.filePath)}
+            href={getLocalizedPath(
+              getPath(prevPost.id, prevPost.filePath),
+              locale
+            )}
             class="flex w-full gap-1 hover:opacity-75"
           >
             <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
@@ -165,7 +190,10 @@ const layoutProps = {
       {
         nextPost && (
           <a
-            href={getPath(nextPost.id, nextPost.filePath)}
+            href={getLocalizedPath(
+              getPath(nextPost.id, nextPost.filePath),
+              locale
+            )}
             class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"
           >
             <div>

@@ -44,11 +44,9 @@ export async function getStaticPaths() {
           currentIndex < sortedPosts.length - 1
             ? sortedPosts[currentIndex + 1]
             : null,
-        alternateUrl: translation
-          ? getPath(translation.id, translation.filePath)
-          : alternateLocale
-            ? getLocalizedPath("/posts", alternateLocale)
-            : undefined,
+        alternateUrl: alternateLocale
+          ? getLocalizedPath(getPath(post.id, post.filePath), alternateLocale)
+          : undefined,
         alternateURLs: translation
           ? {
               [config.site.lang]: getPath(post.id, post.filePath),

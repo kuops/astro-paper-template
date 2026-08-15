@@ -5,7 +5,14 @@ import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
 import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
 import type { CollectionEntry } from "astro:content";
 import type { SidebarGroup } from "@/types/books";
-import { getLocaleFromPath, getLocalizedPath, useTranslations } from "@/i18n";
+import {
+  getLocaleFromPath,
+  getLocalizedPath,
+  tplStr,
+  useTranslations,
+} from "@/i18n";
+import type { Locale } from "@/types/config";
+import { getContentLocale } from "@/utils/localizedContent";
 const locale = getLocaleFromPath(Astro.url.pathname);
 const t = useTranslations(locale);
 
@@ -17,8 +24,12 @@ interface Props {
   sidebar: SidebarGroup[];
   titleMap: Record<string, string>;
   hrefMap: Record<string, string>;
+  sourceLocaleMap?: Record<string, Locale>;
   prevSlug: string | null;
   nextSlug: string | null;
+  indexable?: boolean;
+  alternateUrl?: string;
+  canonicalURL?: string;
 }
 
 const {
@@ -29,25 +40,39 @@ const {
   sidebar,
   titleMap,
   hrefMap,
+  sourceLocaleMap = {},
   prevSlug,
   nextSlug,
+  indexable = true,
+  alternateUrl,
+  canonicalURL,
 } = Astro.props;
 
 const { Content, headings: allHeadings } = await render(chapter);
 const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
+const sourceLocale = getContentLocale(chapter, "books");
+const isFallback = sourceLocale !== locale;
+const sourceLabel = tplStr(t.language.sourceLabel, {
+  language: t.language.names[sourceLocale],
+});
 ---
 
 <BookLayout
   title={chapter.data.title}
   description={chapter.data.description}
+  {canonicalURL}
   {bookTitle}
   bookSlug={book}
   {sidebar}
   currentSlug={slug}
   {titleMap}
   {hrefMap}
+  {sourceLocaleMap}
   {headings}
+  indexable={indexable}
+  {alternateUrl}
 >
+  {isFallback && <p class="mb-3 text-sm text-foreground/55">{sourceLabel}</p>}
   <Content />
 
   <hr class="my-8 border-dashed" />

@@ -10,7 +10,7 @@ import Pagination from "@/components/Pagination.astro";
 import getUniqueTags from "@/utils/getUniqueTags";
 import getPostsByTag from "@/utils/getPostsByTag";
 import config from "@/config";
-import { getLocaleFromPath, useTranslations } from "@/i18n";
+import { getLocaleFromPath, getLocalizedPath, useTranslations } from "@/i18n";
 import { resolveLocalizedEntries } from "@/utils/localizedContent";
 
 export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
@@ -34,13 +34,20 @@ const { tag } = params;
 const { page, tagName } = Astro.props;
 const locale = getLocaleFromPath(Astro.url.pathname);
 const t = useTranslations(locale);
+
+const alternateLocale = config.i18n.locales.find(l => l !== locale);
+const tagPath =
+  page.currentPage > 1 ? `/tags/${tag}/${page.currentPage}` : `/tags/${tag}`;
+const alternateUrl = alternateLocale
+  ? getLocalizedPath(tagPath, alternateLocale)
+  : undefined;
 ---
 
 <Layout
   title={`${t.pages.tagTitle}: ${tagName} | ${config.site.title}`}
   localeAlternates
 >
-  <Header />
+  <Header {alternateUrl} />
   <Main
     pageTitle={[`${t.pages.tagTitle}:`, `${tagName}`]}
     titleTransition={tag}
