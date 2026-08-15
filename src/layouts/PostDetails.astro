@@ -19,16 +19,19 @@ import ArticleEnhancements from "@/components/ArticleEnhancements.astro";
 import MermaidRenderer from "@/components/MermaidRenderer.astro";
 import ImageLightbox from "@/components/ImageLightbox.astro";
 import config from "@/config";
-import { useTranslations } from "@/i18n";
-const t = useTranslations(config.site.lang);
+import { getLocaleFromPath, useTranslations } from "@/i18n";
+import type { Locale } from "@/types/config";
+const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
 
 type Props = {
   post: CollectionEntry<"blog">;
   prevPost: CollectionEntry<"blog"> | null;
   nextPost: CollectionEntry<"blog"> | null;
+  alternateUrl?: string;
+  alternateURLs?: Partial<Record<Locale, string>>;
 };
 
-const { post, prevPost, nextPost } = Astro.props;
+const { post, prevPost, nextPost, alternateUrl, alternateURLs } = Astro.props;
 
 const {
   title,
@@ -75,13 +78,14 @@ const layoutProps = {
   canonicalURL,
   ogImage,
   scrollSmooth: true,
+  alternateURLs,
 };
 
 /* ========== Prev/Next Posts ========== */
 ---
 
 <Layout {...layoutProps}>
-  <Header maxWidth="mx-auto w-full max-w-7xl px-4" />
+  <Header maxWidth="mx-auto w-full max-w-5xl px-4" {alternateUrl} />
   <main
     id="main-content"
     class:list={["mx-auto w-full max-w-5xl px-4 pb-12"]}
@@ -93,7 +97,7 @@ const layoutProps = {
       <div class="min-w-0 flex-1">
         <h1
           transition:name={slugifyStr(title.replaceAll(".", "-"))}
-          class="inline-block text-2xl font-bold text-accent sm:text-3xl"
+          class="inline-block text-[1.75rem] leading-9 font-bold text-accent sm:text-3xl"
         >
           {title}
         </h1>
@@ -174,7 +178,7 @@ const layoutProps = {
       }
     </div>
   </main>
-  <Footer maxWidth="mx-auto w-full max-w-7xl px-4" />
+  <Footer maxWidth="mx-auto w-full max-w-5xl px-4" />
 </Layout>
 
 <ArticleEnhancements />

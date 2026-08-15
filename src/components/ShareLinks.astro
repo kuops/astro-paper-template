@@ -1,8 +1,8 @@
 ---
 import config from "@/config";
 import LinkButton from "./LinkButton.astro";
-import { useTranslations, tplStr } from "@/i18n";
-const t = useTranslations(config.site.lang);
+import { getLocaleFromPath, useTranslations, tplStr } from "@/i18n";
+const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
 
 const URL = Astro.url;
 

@@ -1,10 +1,9 @@
 ---
 import IconHash from "@/assets/icons/IconHash.svg";
 import IconX from "@/assets/icons/IconX.svg";
-import config from "@/config";
-import { useTranslations } from "@/i18n";
+import { getLocaleFromPath, useTranslations } from "@/i18n";
 
-const t = useTranslations(config.site.lang);
+const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
 
 interface Heading {
   depth: number;
@@ -23,7 +22,7 @@ const minDepth = Math.min(...headings.map(heading => heading.depth));
 <div class="mobile-toc xl:hidden" data-mobile-toc>
   <button
     type="button"
-    class="focus-outline fixed end-4 bottom-24 z-40 flex size-11 items-center justify-center rounded-md border border-border bg-background shadow-md transition-colors hover:border-accent hover:text-accent active:bg-foreground/5"
+    class="fixed end-4 bottom-24 z-40 floating-tool-button"
     data-mobile-toc-open
     aria-label={t.pages.openToc}
     title={t.pages.openToc}
@@ -227,14 +226,15 @@ const minDepth = Math.min(...headings.map(heading => heading.depth));
     margin: auto auto 0;
     padding: 0;
     overflow: hidden;
-    border: 0;
-    border-radius: 1rem 1rem 0 0;
+    border: 1px solid var(--border);
+    border-bottom: 0;
+    border-radius: var(--surface-radius) var(--surface-radius) 0 0;
     color: var(--foreground);
     background: var(--background);
-    box-shadow: 0 -12px 40px color-mix(in srgb, #000 22%, transparent);
+    box-shadow: var(--sheet-shadow);
   }
   .mobile-toc-dialog::backdrop {
-    background: color-mix(in srgb, #000 42%, transparent);
+    background: var(--overlay-backdrop);
   }
   .mobile-toc-dialog[open] {
     animation: mobile-toc-in 0.2s ease-out;
@@ -269,7 +269,7 @@ const minDepth = Math.min(...headings.map(heading => heading.depth));
     margin-inline-start: -1px;
     border-inline-start-color: var(--accent);
     color: var(--foreground);
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
     font-weight: 600;
   }
   @keyframes mobile-toc-in {

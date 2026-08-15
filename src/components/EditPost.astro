@@ -2,9 +2,9 @@
 import type { CollectionEntry } from "astro:content";
 import IconEdit from "@/assets/icons/IconEdit.svg";
 import config from "@/config";
-import { useTranslations } from "@/i18n";
+import { getLocaleFromPath, useTranslations } from "@/i18n";
 
-const t = useTranslations(config.site.lang);
+const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
 
 type Props = {
   hideEditPost?: CollectionEntry<"blog">["data"]["hideEditPost"];

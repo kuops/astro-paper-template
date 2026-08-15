@@ -20,6 +20,7 @@ type Props = {
   sidebar: SidebarGroup[];
   currentSlug: string;
   titleMap?: Record<string, string>;
+  hrefMap: Record<string, string>;
   headings: { depth: number; slug: string; text: string }[];
 };
 
@@ -31,6 +32,7 @@ const {
   sidebar,
   currentSlug,
   titleMap = {},
+  hrefMap,
   headings,
 } = Astro.props;
 ---
@@ -47,6 +49,7 @@ const {
     {sidebar}
     {currentSlug}
     {titleMap}
+    {hrefMap}
     {headings}
   />
   <main
@@ -60,12 +63,18 @@ const {
         <div
           class="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto overscroll-contain"
         >
-          <BookSidebar {bookSlug} {sidebar} {currentSlug} {titleMap} />
+          <BookSidebar
+            {bookSlug}
+            {sidebar}
+            {currentSlug}
+            {titleMap}
+            {hrefMap}
+          />
         </div>
       </aside>
       <div class="min-w-0 flex-1">
         <h1
-          class="mb-8 text-2xl font-bold text-accent sm:text-3xl"
+          class="mb-8 text-[1.75rem] leading-9 font-bold text-accent sm:text-3xl"
           data-pagefind-meta="title"
         >
           {title}

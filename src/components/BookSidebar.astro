@@ -7,9 +7,10 @@ type Props = {
   sidebar: SidebarGroup[];
   currentSlug: string;
   titleMap?: Record<string, string>;
+  hrefMap: Record<string, string>;
 };
 
-const { bookSlug, sidebar, currentSlug, titleMap = {} } = Astro.props;
+const { bookSlug, sidebar, currentSlug, titleMap = {}, hrefMap } = Astro.props;
 ---
 
 <BookChapterNav
@@ -17,5 +18,6 @@ const { bookSlug, sidebar, currentSlug, titleMap = {} } = Astro.props;
   {sidebar}
   {currentSlug}
   {titleMap}
+  {hrefMap}
   variant="desktop"
 />

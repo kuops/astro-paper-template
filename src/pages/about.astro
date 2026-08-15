@@ -1,16 +1,68 @@
 ---
-import { getEntry, render } from "astro:content";
+import { getCollection, render } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Breadcrumb from "@/components/Breadcrumb.astro";
 import Footer from "@/components/Footer.astro";
 import config from "@/config";
+import {
+  getAlternateLocale,
+  getLocaleFromPath,
+  getLocalizedPath,
+  tplStr,
+  useTranslations,
+} from "@/i18n";
+import {
+  getContentLocale,
+  getContentRelativePath,
+  getTranslationKey,
+  resolveLocalizedEntries,
+} from "@/utils/localizedContent";
 
-const about = await getEntry("pages", "about");
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
+const pages = await getCollection("pages");
+const localizedPages = resolveLocalizedEntries(pages, "pages", locale);
+const about = localizedPages.find(
+  entry => getContentRelativePath(entry, "pages") === "about"
+);
 
 if (!about) {
   throw new Error("Missing content entry: `about.md` in `src/data/pages/`");
 }
+
+const alternateLocale = getAlternateLocale(locale);
+const translationKey = getTranslationKey(about, "pages");
+const exactEntry = pages.find(
+  entry =>
+    getTranslationKey(entry, "pages") === translationKey &&
+    getContentLocale(entry, "pages") === locale
+);
+const alternateEntry = alternateLocale
+  ? pages.find(
+      entry =>
+        getTranslationKey(entry, "pages") === translationKey &&
+        getContentLocale(entry, "pages") === alternateLocale
+    )
+  : undefined;
+const sourceLocale = getContentLocale(about, "pages");
+const isFallback = !exactEntry;
+const alternateUrl = alternateLocale
+  ? getLocalizedPath("/about", alternateLocale)
+  : undefined;
+const alternateURLs =
+  exactEntry && alternateEntry
+    ? {
+        [locale]: getLocalizedPath("/about", locale),
+        [alternateLocale!]: getLocalizedPath("/about", alternateLocale!),
+      }
+    : {};
+const canonicalURL = isFallback
+  ? new URL(getLocalizedPath("/about", sourceLocale), Astro.url).href
+  : about.data.canonicalURL;
+const sourceLabel = tplStr(t.language.sourceLabel, {
+  language: t.language.names[sourceLocale],
+});
 
 const { Content } = await render(about);
 ---
@@ -19,15 +71,23 @@ const { Content } = await render(about);
   title={`${about.data.title} | ${config.site.title}`}
   description={about.data.description}
   ogImage={about.data.ogImage}
-  canonicalURL={about.data.canonicalURL}
+  {canonicalURL}
+  {alternateURLs}
 >
-  <Header />
+  <Header {alternateUrl} />
 
   <Breadcrumb />
 
   <main id="main-content" class="app-layout">
     <section class="app-prose mb-28 max-w-app prose-img:border-0">
-      <h1 class="text-2xl font-semibold sm:text-3xl">{about.data.title}</h1>
+      {
+        isFallback && (
+          <p class="mb-3 text-sm text-foreground/55">{sourceLabel}</p>
+        )
+      }
+      <h1 class="text-[1.75rem] leading-9 font-semibold sm:text-3xl">
+        {about.data.title}
+      </h1>
       <Content />
     </section>
   </main>

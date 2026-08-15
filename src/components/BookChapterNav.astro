@@ -1,15 +1,16 @@
 ---
 import type { SidebarGroup } from "@/types/books";
-import config from "@/config";
-import { useTranslations } from "@/i18n";
+import { getLocaleFromPath, getLocalizedPath, useTranslations } from "@/i18n";
 
-const t = useTranslations(config.site.lang);
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
 
 type Props = {
   bookSlug: string;
   sidebar: SidebarGroup[];
   currentSlug: string;
   titleMap?: Record<string, string>;
+  hrefMap: Record<string, string>;
   variant?: "desktop" | "mobile";
 };
 
@@ -18,6 +19,7 @@ const {
   sidebar,
   currentSlug,
   titleMap = {},
+  hrefMap,
   variant = "desktop",
 } = Astro.props;
 ---
@@ -31,7 +33,11 @@ const {
     sidebar.map(group => {
       const isActive = group.items.includes(currentSlug);
       const links = group.items.map(item => {
-        const href = `/books/${bookSlug}/${item}`;
+        const href =
+          hrefMap[item] ??
+          getLocalizedPath(`/books/${bookSlug}/${item}`, locale);
+        const sourceLocale = getLocaleFromPath(href);
+        const isFallback = sourceLocale !== locale;
         const isCurrent = currentSlug === item;
         const label = titleMap[item] || item;
         return (
@@ -42,6 +48,11 @@ const {
             data-current-chapter={isCurrent ? "true" : undefined}
           >
             <span class="book-chapter-label">{label}</span>
+            {isFallback && (
+              <span class="ms-1 flex-none text-[0.6875rem] text-foreground/45 uppercase">
+                ({sourceLocale})
+              </span>
+            )}
           </a>
         );
       });
@@ -205,12 +216,12 @@ const {
     white-space: nowrap;
   }
   .book-chapter-link:hover {
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
     color: var(--accent);
   }
   .book-chapter-link.active {
     border-inline-start-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
     color: var(--foreground);
     font-weight: 600;
   }

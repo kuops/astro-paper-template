@@ -1,6 +1,14 @@
 import type { UIStrings } from "../types";
 
 export default {
+  language: {
+    switchLanguage: "切换语言",
+    names: {
+      zh: "中文",
+      en: "English",
+    },
+    sourceLabel: "{{language}}原文",
+  },
   nav: {
     home: "首页",
     posts: "文章",
@@ -37,7 +45,7 @@ export default {
     allPosts: "所有文章",
   },
   footer: {
-    copyright: "版权所有",
+    copyright: "© {{year}}",
     allRightsReserved: "保留所有权利。",
   },
   pages: {

@@ -1,0 +1,72 @@
+---
+import {
+  buildHrefMap,
+  buildSidebar,
+  buildTitleMap,
+  getAllBooks,
+  getBookEntries,
+  getChapterSlug,
+  getFlatItems,
+  isBookIndex,
+  isGroupIndex,
+} from "@/utils/books";
+import BookChapterContent from "@/components/BookChapterContent.astro";
+import { getSecondaryLocales } from "@/i18n";
+import { getContentLocale } from "@/utils/localizedContent";
+
+export async function getStaticPaths() {
+  const paths = [];
+
+  for (const locale of getSecondaryLocales()) {
+    const books = (await getAllBooks(locale)).filter(
+      book => book.sourceLocale === locale
+    );
+
+    for (const book of books) {
+      const entries = await getBookEntries(book.slug, locale);
+      const translatedEntries = entries.filter(
+        entry => getContentLocale(entry, "books") === locale
+      );
+
+      for (const entry of translatedEntries) {
+        if (isBookIndex(entry) || isGroupIndex(entry)) continue;
+        const slug = getChapterSlug(entry);
+        if (!slug) continue;
+        paths.push({
+          params: { locale, book: book.slug, slug },
+          props: {
+            chapter: entry,
+            entries,
+            bookTitle: book.title,
+          },
+        });
+      }
+    }
+  }
+
+  return paths;
+}
+
+const { chapter, entries, bookTitle } = Astro.props;
+const { book, slug } = Astro.params;
+const sidebar = buildSidebar(book!, entries);
+const titleMap = buildTitleMap(entries, book!);
+const hrefMap = buildHrefMap(entries, book!);
+const flatItems = getFlatItems(sidebar);
+const currentIndex = flatItems.indexOf(slug!);
+const prevSlug = currentIndex > 0 ? flatItems[currentIndex - 1] : null;
+const nextSlug =
+  currentIndex < flatItems.length - 1 ? flatItems[currentIndex + 1] : null;
+---
+
+<BookChapterContent
+  {chapter}
+  book={book!}
+  {bookTitle}
+  slug={slug!}
+  {sidebar}
+  {titleMap}
+  {hrefMap}
+  {prevSlug}
+  {nextSlug}
+/>

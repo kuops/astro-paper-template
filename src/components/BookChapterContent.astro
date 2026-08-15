@@ -5,9 +5,9 @@ import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
 import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
 import type { CollectionEntry } from "astro:content";
 import type { SidebarGroup } from "@/types/books";
-import config from "@/config";
-import { useTranslations } from "@/i18n";
-const t = useTranslations(config.site.lang);
+import { getLocaleFromPath, getLocalizedPath, useTranslations } from "@/i18n";
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
 
 interface Props {
   chapter: CollectionEntry<"books">;
@@ -16,6 +16,7 @@ interface Props {
   slug: string;
   sidebar: SidebarGroup[];
   titleMap: Record<string, string>;
+  hrefMap: Record<string, string>;
   prevSlug: string | null;
   nextSlug: string | null;
 }
@@ -27,6 +28,7 @@ const {
   slug,
   sidebar,
   titleMap,
+  hrefMap,
   prevSlug,
   nextSlug,
 } = Astro.props;
@@ -43,6 +45,7 @@ const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
   {sidebar}
   currentSlug={slug}
   {titleMap}
+  {hrefMap}
   {headings}
 >
   <Content />
@@ -53,7 +56,7 @@ const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
     {
       prevSlug ? (
         <a
-          href={`/books/${book}/${prevSlug}`}
+          href={hrefMap[prevSlug]}
           class="flex min-h-14 w-full min-w-0 items-center gap-1 rounded-md py-2 hover:opacity-75"
         >
           <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
@@ -69,7 +72,7 @@ const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
       ) : (
         nextSlug && (
           <a
-            href="/books"
+            href={getLocalizedPath("/books", locale)}
             class="flex min-h-14 w-full min-w-0 items-center gap-1 rounded-md py-2 hover:opacity-75"
           >
             <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
@@ -83,7 +86,7 @@ const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
     {
       nextSlug ? (
         <a
-          href={`/books/${book}/${nextSlug}`}
+          href={hrefMap[nextSlug]}
           class="flex min-h-14 w-full min-w-0 items-center justify-end gap-1 rounded-md py-2 text-end hover:opacity-75"
         >
           <div class="min-w-0">
@@ -96,7 +99,7 @@ const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
         </a>
       ) : prevSlug ? (
         <a
-          href="/books"
+          href={getLocalizedPath("/books", locale)}
           class="flex min-h-14 w-full min-w-0 items-center justify-end gap-1 rounded-md py-2 text-end hover:opacity-75"
         >
           <span class="text-sm font-medium text-accent">
@@ -106,7 +109,7 @@ const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
         </a>
       ) : (
         <a
-          href="/books"
+          href={getLocalizedPath("/books", locale)}
           class="col-span-2 flex min-h-14 w-full items-center justify-center gap-1 rounded-md py-2 hover:opacity-75"
         >
           <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />

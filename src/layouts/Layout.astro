@@ -3,6 +3,8 @@ import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
 import { PUBLIC_GOOGLE_SITE_VERIFICATION } from "astro:env/client";
 import config from "@/config";
+import { getLocaleFromPath, getLocalizedPath } from "@/i18n";
+import type { Locale } from "@/types/config";
 import "@/styles/global.css";
 import PagefindModal from "@/components/PagefindModal.astro";
 
@@ -16,6 +18,8 @@ type Props = {
   pubDatetime?: Date;
   modDatetime?: Date | null;
   scrollSmooth?: boolean;
+  alternateURLs?: Partial<Record<Locale, string>>;
+  localeAlternates?: boolean;
 };
 
 const {
@@ -28,9 +32,20 @@ const {
   pubDatetime,
   modDatetime,
   scrollSmooth = false,
+  alternateURLs = {},
+  localeAlternates = false,
 } = Astro.props;
 
 const socialImageURL = new URL(ogImage, Astro.url);
+const locale = getLocaleFromPath(Astro.url.pathname);
+const resolvedAlternateURLs = localeAlternates
+  ? Object.fromEntries(
+      config.i18n.locales.map(alternateLocale => [
+        alternateLocale,
+        getLocalizedPath(Astro.url.pathname, alternateLocale),
+      ])
+    )
+  : alternateURLs;
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -54,7 +69,7 @@ const structuredData = {
 <!doctype html>
 <html
   dir={config.site.dir}
-  lang={config.site.lang}
+  lang={locale}
   class={scrollSmooth ? "scroll-smooth" : undefined}
 >
   <head>
@@ -62,6 +77,15 @@ const structuredData = {
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonicalURL} />
+    {
+      Object.entries(resolvedAlternateURLs).map(([alternateLocale, href]) => (
+        <link
+          rel="alternate"
+          hreflang={alternateLocale}
+          href={new URL(href, Astro.url).href}
+        />
+      ))
+    }
     <meta name="generator" content={Astro.generator} />
 
     <Font cssVariable="--font-google-sans-code" preload />
@@ -119,7 +143,7 @@ const structuredData = {
       rel="alternate"
       type="application/rss+xml"
       title={config.site.title}
-      href={new URL("rss.xml", Astro.site)}
+      href={new URL(getLocalizedPath("/rss.xml", locale), Astro.site)}
     />
 
     <meta name="theme-color" content="#fdfdfd" />

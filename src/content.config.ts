@@ -21,6 +21,7 @@ const blog = defineCollection({
       ogImage: image().or(z.string()).optional(),
       description: z.string(),
       canonicalURL: z.string().optional(),
+      translationKey: z.string().optional(),
       hideEditPost: z.boolean().optional(),
       timezone: z.string().optional(),
     }),
@@ -34,6 +35,7 @@ const books = defineCollection({
     order: z.number().default(0),
     group: z.string().optional(),
     draft: z.boolean().optional(),
+    translationKey: z.string().optional(),
   }),
 });
 
@@ -44,6 +46,7 @@ const pages = defineCollection({
     description: z.string().optional(),
     ogImage: z.string().optional(),
     canonicalURL: z.string().optional(),
+    translationKey: z.string().optional(),
   }),
 });
 

@@ -7,6 +7,7 @@ import {
   getAllBooks,
   getFirstChapter,
   getChapterEntry,
+  buildHrefMap,
 } from "@/utils/books";
 import BookChapterContent from "@/components/BookChapterContent.astro";
 
@@ -34,6 +35,7 @@ const { book } = Astro.params;
 
 const sidebar = buildSidebar(book!, entries);
 const titleMap = buildTitleMap(entries, book!);
+const hrefMap = buildHrefMap(entries, book!);
 
 const flatItems = getFlatItems(sidebar);
 const currentIndex = flatItems.indexOf(slug);
@@ -49,6 +51,7 @@ const nextSlug =
   {slug}
   {sidebar}
   {titleMap}
+  {hrefMap}
   {prevSlug}
   {nextSlug}
 />

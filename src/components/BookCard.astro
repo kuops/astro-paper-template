@@ -1,26 +1,41 @@
 ---
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
-import config from "@/config";
-import { useTranslations } from "@/i18n";
+import type { Locale } from "@/types/config";
+import { getLocaleFromPath, tplStr, useTranslations } from "@/i18n";
 
 type Props = {
   slug: string;
   title: string;
   description: string;
+  href: string;
+  sourceLocale: Locale;
+  requestedLocale: Locale;
 };
 
-const { slug, title, description } = Astro.props;
-const t = useTranslations(config.site.lang);
+const { title, description, href, sourceLocale, requestedLocale } = Astro.props;
+const locale = requestedLocale ?? getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
+const isFallback = sourceLocale !== requestedLocale;
+const sourceLabel = tplStr(t.language.sourceLabel, {
+  language: t.language.names[sourceLocale],
+});
 ---
 
 <a
-  href={`/books/${slug}`}
+  {href}
   class="group block rounded-lg border border-border p-6 transition-colors hover:border-accent"
 >
   <h2 class="text-xl font-semibold text-foreground group-hover:text-accent">
     {title}
+    {
+      isFallback && (
+        <span class="ms-2 align-middle text-xs font-normal text-foreground/55">
+          ({sourceLabel})
+        </span>
+      )
+    }
   </h2>
-  <p class="mt-2 text-sm text-foreground/60">{description}</p>
+  <p class="mt-2 font-reading text-sm text-foreground/60">{description}</p>
   <span class="mt-4 inline-flex items-center gap-1 text-sm text-accent">
     {t.book.startReading}
     <IconArrowRight class="size-4 rtl:rotate-180" />

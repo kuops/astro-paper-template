@@ -9,23 +9,32 @@ import Card from "@/components/Card.astro";
 import Pagination from "@/components/Pagination.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
 import config from "@/config";
-import { useTranslations } from "@/i18n";
+import { getLocaleFromPath, useTranslations } from "@/i18n";
+import { resolveLocalizedEntries } from "@/utils/localizedContent";
 
 export const getStaticPaths = (async ({ paginate }) => {
   const posts = await getCollection("blog", ({ data }) => !data.draft);
-  return paginate(getSortedPosts(posts), { pageSize: config.posts.perPage });
+  const localizedPosts = resolveLocalizedEntries(
+    posts,
+    "blog",
+    config.site.lang
+  );
+  return paginate(getSortedPosts(localizedPosts), {
+    pageSize: config.posts.perPage,
+  });
 }) satisfies GetStaticPaths;
 
 const { page } = Astro.props;
 
-const t = useTranslations(config.site.lang);
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
 ---
 
-<Layout title={`${t.pages.postsTitle} | ${config.site.title}`}>
+<Layout title={`${t.pages.postsTitle} | ${config.site.title}`} localeAlternates>
   <Header />
   <Main pageTitle={t.pages.postsTitle} pageDesc={t.pages.postsDesc}>
     <ul>
-      {page.data.map(data => <Card {...data} />)}
+      {page.data.map(data => <Card requestedLocale={locale} {...data} />)}
     </ul>
   </Main>
 

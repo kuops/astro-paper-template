@@ -2,9 +2,10 @@
 import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
 import LinkButton from "./LinkButton.astro";
 import config from "@/config";
-import { useTranslations } from "@/i18n";
+import { getLocaleFromPath, getLocalizedPath, useTranslations } from "@/i18n";
 
-const t = useTranslations(config.site.lang);
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
 ---
 
 {
@@ -12,7 +13,7 @@ const t = useTranslations(config.site.lang);
     <div class="flex items-center justify-start">
       <LinkButton
         id="back-button"
-        href="/"
+        href={getLocalizedPath("/", locale)}
         class="focus-outline -ms-2 mt-4 mb-2 flex items-center hover:text-foreground/75"
       >
         <IconChevronLeft class="inline-block size-6 rtl:rotate-180" />

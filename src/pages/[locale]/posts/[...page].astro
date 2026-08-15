@@ -1,0 +1,24 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
+import PostsPage from "../../posts/[...page].astro";
+import config from "@/config";
+import { getSecondaryLocales } from "@/i18n";
+import getSortedPosts from "@/utils/getSortedPosts";
+import { resolveLocalizedEntries } from "@/utils/localizedContent";
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+
+  return getSecondaryLocales().flatMap(locale =>
+    paginate(getSortedPosts(resolveLocalizedEntries(posts, "blog", locale)), {
+      params: { locale },
+      pageSize: config.posts.perPage,
+    })
+  );
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.props;
+---
+
+<PostsPage {page} />

@@ -1,0 +1,75 @@
+---
+import {
+  buildHrefMap,
+  buildSidebar,
+  buildTitleMap,
+  getAllBooks,
+  getBookEntries,
+  getChapterEntry,
+  getFirstChapter,
+  getFlatItems,
+} from "@/utils/books";
+import BookChapterContent from "@/components/BookChapterContent.astro";
+import { getSecondaryLocales, resolveLocale } from "@/i18n";
+
+export async function getStaticPaths() {
+  const paths = [];
+
+  for (const locale of getSecondaryLocales()) {
+    const books = (await getAllBooks(locale)).filter(
+      book => book.sourceLocale === locale
+    );
+
+    for (const book of books) {
+      const entries = await getBookEntries(book.slug, locale);
+      const firstSlug = getFirstChapter(book.slug, entries);
+      if (!firstSlug) continue;
+      const chapter = getChapterEntry(entries, book.slug, firstSlug);
+      if (!chapter) continue;
+      const hrefMap = buildHrefMap(entries, book.slug);
+      paths.push({
+        params: { locale, book: book.slug },
+        props: {
+          chapter,
+          entries,
+          slug: firstSlug,
+          bookTitle: book.title,
+          redirectTo: hrefMap[firstSlug],
+        },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { chapter, entries, slug, bookTitle, redirectTo } = Astro.props;
+const locale = resolveLocale(Astro.params.locale);
+const { book } = Astro.params;
+const hrefMap = buildHrefMap(entries, book!);
+const sourceChapterPath = redirectTo;
+
+if (sourceChapterPath && !hrefMap[slug].startsWith(`/${locale}/`)) {
+  return Astro.redirect(sourceChapterPath);
+}
+
+const sidebar = buildSidebar(book!, entries);
+const titleMap = buildTitleMap(entries, book!);
+const flatItems = getFlatItems(sidebar);
+const currentIndex = flatItems.indexOf(slug);
+const prevSlug = currentIndex > 0 ? flatItems[currentIndex - 1] : null;
+const nextSlug =
+  currentIndex < flatItems.length - 1 ? flatItems[currentIndex + 1] : null;
+---
+
+<BookChapterContent
+  {chapter}
+  book={book!}
+  {bookTitle}
+  {slug}
+  {sidebar}
+  {titleMap}
+  {hrefMap}
+  {prevSlug}
+  {nextSlug}
+/>

@@ -1,8 +1,7 @@
 ---
 import IconArrowNarrowUp from "@/assets/icons/IconArrowNarrowUp.svg";
-import config from "@/config";
-import { useTranslations } from "@/i18n";
-const t = useTranslations(config.site.lang);
+import { getLocaleFromPath, useTranslations } from "@/i18n";
+const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
 ---
 
 <div
@@ -14,7 +13,7 @@ const t = useTranslations(config.site.lang);
 >
   <button
     data-button="back-to-top"
-    class="focus-outline flex size-11 items-center justify-center rounded-md border border-border bg-background shadow-md transition-colors hover:border-accent hover:text-accent active:bg-foreground/5"
+    class="floating-tool-button"
     aria-label={t.post.backToTop}
     title={t.post.backToTop}
   >

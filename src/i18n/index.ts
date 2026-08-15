@@ -17,4 +17,15 @@ export function useTranslations(locale: string): UIStrings {
 }
 
 export { tplStr } from "./format";
+export {
+  getAlternateLocale,
+  getLocaleFromPath,
+  getLocalePrefix,
+  getLocalizedPath,
+  getSecondaryLocalePaths,
+  getSecondaryLocales,
+  isLocale,
+  resolveLocale,
+  stripLocalePrefix,
+} from "./locale";
 export type { UIStrings } from "./types";

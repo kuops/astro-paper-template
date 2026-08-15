@@ -1,0 +1,54 @@
+---
+import { getCollection } from "astro:content";
+import PostDetails from "@/layouts/PostDetails.astro";
+import config from "@/config";
+import { getSecondaryLocales } from "@/i18n";
+import { getPath } from "@/utils/getPath";
+import getSortedPosts from "@/utils/getSortedPosts";
+import { getContentLocale, getTranslationKey } from "@/utils/localizedContent";
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+
+  return getSecondaryLocales().flatMap(locale => {
+    const posts = getSortedPosts(
+      allPosts.filter(post => getContentLocale(post, "blog") === locale)
+    );
+
+    return posts.map((post, currentIndex) => {
+      const source = allPosts.find(
+        candidate =>
+          getTranslationKey(candidate, "blog") ===
+            getTranslationKey(post, "blog") &&
+          getContentLocale(candidate, "blog") === config.site.lang
+      );
+
+      return {
+        params: {
+          locale,
+          slug: getPath(post.id, post.filePath, false),
+        },
+        props: {
+          post,
+          prevPost: currentIndex > 0 ? posts[currentIndex - 1] : null,
+          nextPost:
+            currentIndex < posts.length - 1 ? posts[currentIndex + 1] : null,
+          alternateUrl: source
+            ? getPath(source.id, source.filePath)
+            : getPath(post.id, post.filePath),
+          alternateURLs: source
+            ? {
+                [config.site.lang]: getPath(source.id, source.filePath),
+                [locale]: getPath(post.id, post.filePath),
+              }
+            : {},
+        },
+      };
+    });
+  });
+}
+
+const { post, prevPost, nextPost, alternateUrl, alternateURLs } = Astro.props;
+---
+
+<PostDetails {post} {prevPost} {nextPost} {alternateUrl} {alternateURLs} />

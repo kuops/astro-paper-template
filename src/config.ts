@@ -3,16 +3,27 @@ import type { ResolvedAstroPaperConfig } from "./types/config";
 import { PUBLIC_GOOGLE_SITE_VERIFICATION } from "astro:env/client";
 
 const DEFAULT_OG_IMAGE = "astropaper-og.jpg";
+const defaultLocale = userConfig.site.lang ?? "en";
+const locales = userConfig.i18n?.locales ?? [defaultLocale];
+
+if (!locales.includes(defaultLocale)) {
+  throw new Error(
+    `The default locale "${defaultLocale}" must be included in i18n.locales.`
+  );
+}
 
 const config: ResolvedAstroPaperConfig = {
   site: {
     ...userConfig.site,
     ogImage: userConfig.site.ogImage ?? DEFAULT_OG_IMAGE,
-    lang: userConfig.site.lang ?? "en",
+    lang: defaultLocale,
     timezone: userConfig.site.timezone ?? "UTC",
     dir: userConfig.site.dir ?? "ltr",
     googleVerification:
       userConfig.site.googleVerification || PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
+  i18n: {
+    locales,
   },
   posts: {
     perPage: userConfig.posts?.perPage ?? 4,

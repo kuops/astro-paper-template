@@ -23,6 +23,15 @@ import {
 import { transformerFileName } from "./src/utils/transformers/fileName";
 import config from "./astro-paper.config";
 
+const defaultLocale = config.site.lang ?? "en";
+const locales = config.i18n?.locales ?? [defaultLocale];
+
+if (!locales.includes(defaultLocale)) {
+  throw new Error(
+    `The default locale "${defaultLocale}" must be included in i18n.locales.`
+  );
+}
+
 export default defineConfig({
   site: config.site.url,
   integrations: [
@@ -33,8 +42,8 @@ export default defineConfig({
     }),
   ],
   i18n: {
-    locales: ["zh"],
-    defaultLocale: "zh",
+    locales,
+    defaultLocale,
     routing: {
       prefixDefaultLocale: false,
     },
@@ -96,7 +105,7 @@ export default defineConfig({
       weights: [300, 400, 500, 600, 700],
       styles: ["normal", "italic"],
       formats: ["woff2"],
-      display: "optional",
+      display: "swap",
     },
   ],
 });

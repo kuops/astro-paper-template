@@ -3,12 +3,17 @@ import BookChapterNav from "@/components/BookChapterNav.astro";
 import IconArrowLeft from "@/assets/icons/IconArrowLeft.svg";
 import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
 import IconX from "@/assets/icons/IconX.svg";
-import config from "@/config";
-import { tplStr, useTranslations } from "@/i18n";
+import {
+  getLocaleFromPath,
+  getLocalizedPath,
+  tplStr,
+  useTranslations,
+} from "@/i18n";
 import type { SidebarGroup } from "@/types/books";
 import { getFlatItems } from "@/utils/books";
 
-const t = useTranslations(config.site.lang);
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
 
 type Props = {
   bookTitle: string;
@@ -16,11 +21,19 @@ type Props = {
   sidebar: SidebarGroup[];
   currentSlug: string;
   titleMap: Record<string, string>;
+  hrefMap: Record<string, string>;
   headings: { depth: number; slug: string; text: string }[];
 };
 
-const { bookTitle, bookSlug, sidebar, currentSlug, titleMap, headings } =
-  Astro.props;
+const {
+  bookTitle,
+  bookSlug,
+  sidebar,
+  currentSlug,
+  titleMap,
+  hrefMap,
+  headings,
+} = Astro.props;
 const flatItems = getFlatItems(sidebar);
 const currentIndex = flatItems.indexOf(currentSlug);
 const currentNumber = Math.max(currentIndex + 1, 1);
@@ -39,7 +52,7 @@ const minDepth =
       class="mx-auto grid h-[52px] w-full max-w-7xl grid-cols-[44px_minmax(0,1fr)_44px] items-center px-1 sm:px-4"
     >
       <a
-        href="/books"
+        href={getLocalizedPath("/books", locale)}
         class="focus-outline flex size-11 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-foreground/5 hover:text-accent active:bg-foreground/10"
         aria-label={t.book.backToBooks}
         title={t.book.backToBooks}
@@ -147,6 +160,7 @@ const minDepth =
             {sidebar}
             {currentSlug}
             {titleMap}
+            {hrefMap}
             variant="mobile"
           />
         </div>
@@ -409,14 +423,15 @@ const minDepth =
     margin: auto auto 0;
     padding: 0;
     overflow: hidden;
-    border: 0;
-    border-radius: 1rem 1rem 0 0;
+    border: 1px solid var(--border);
+    border-bottom: 0;
+    border-radius: var(--surface-radius) var(--surface-radius) 0 0;
     color: var(--foreground);
     background: var(--background);
-    box-shadow: 0 -12px 40px color-mix(in srgb, #000 22%, transparent);
+    box-shadow: var(--sheet-shadow);
   }
   .book-mobile-dialog::backdrop {
-    background: color-mix(in srgb, #000 42%, transparent);
+    background: var(--overlay-backdrop);
   }
   .book-mobile-dialog[open] {
     animation: book-dialog-in 0.2s ease-out;
@@ -480,7 +495,7 @@ const minDepth =
     margin-inline-start: -1px;
     border-inline-start-color: var(--accent);
     color: var(--foreground);
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
     font-weight: 600;
   }
   @keyframes book-dialog-in {

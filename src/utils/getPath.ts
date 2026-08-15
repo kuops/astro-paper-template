@@ -1,4 +1,8 @@
-import { BLOG_PATH } from "@/content.config";
+import { getLocalizedPath } from "@/i18n/locale";
+import {
+  getContentLocale,
+  getContentRelativePath,
+} from "@/utils/localizedContent";
 import { slugifyStr } from "./slugify";
 
 /**
@@ -13,15 +17,18 @@ export function getPath(
   filePath: string | undefined,
   includeBase = true
 ) {
-  const pathSegments = filePath
-    ?.replace(BLOG_PATH, "")
-    .split("/")
+  const relativePath = filePath
+    ? getContentRelativePath({ filePath }, "blog")
+    : undefined;
+  const pathSegments = relativePath
+    ?.split("/")
     .filter(path => path !== "") // remove empty string in the segments ["", "other-path"] <- empty string will be removed
     .filter(path => !path.startsWith("_")) // exclude directories start with underscore "_"
     .slice(0, -1) // remove the last segment_ file name_ since it's unnecessary
     .map(segment => slugifyStr(segment)); // slugify each segment path
 
-  const basePath = includeBase ? "/posts" : "";
+  const locale = getContentLocale({ filePath }, "blog");
+  const basePath = includeBase ? getLocalizedPath("/posts", locale) : "";
 
   // Making sure `id` does not contain the directory
   const slug = id.split("/").pop()!;

@@ -1,4 +1,12 @@
 export interface UIStrings {
+  language: {
+    switchLanguage: string;
+    names: {
+      zh: string;
+      en: string;
+    };
+    sourceLabel: string;
+  };
   nav: {
     home: string;
     posts: string;

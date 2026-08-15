@@ -1,10 +1,10 @@
 ---
-import config from "@/config";
-import { useTranslations } from "@/i18n";
+import { getLocaleFromPath, useTranslations } from "@/i18n";
 import { getAllBooks } from "@/utils/books";
 
-const t = useTranslations(config.site.lang);
-const books = await getAllBooks();
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
+const books = await getAllBooks(locale);
 const bookMap = Object.fromEntries(books.map(b => [b.slug, b.title]));
 ---
 
@@ -236,7 +236,7 @@ const bookMap = Object.fromEntries(books.map(b => [b.slug, b.title]));
         const data = await result.data();
         if (currentVersion !== searchVersion) return;
         const pageTitle = data.meta?.title || data.title || "";
-        const bookMatch = data.url?.match(/^\/books\/([^/]+)\//);
+        const bookMatch = data.url?.match(/^\/(?:zh\/|en\/)?books\/([^/]+)\//);
         const prefix = bookMatch
           ? tBooks + " › " + (bookMap[bookMatch[1]] || "")
           : tArticles;
@@ -402,11 +402,9 @@ const bookMap = Object.fromEntries(books.map(b => [b.slug, b.title]));
 
 <style is:global>
   #search-modal {
-    border: none;
+    border: 1px solid var(--border);
     padding: 0;
-    background: color-mix(in srgb, var(--background) 85%, transparent);
-    backdrop-filter: blur(16px) saturate(1.8);
-    -webkit-backdrop-filter: blur(16px) saturate(1.8);
+    background: var(--background);
     border-radius: var(--pf-border-radius);
     box-shadow: var(--pf-shadow-lg);
     max-width: var(--pf-modal-max-width);
@@ -420,8 +418,6 @@ const bookMap = Object.fromEntries(books.map(b => [b.slug, b.title]));
 
   #search-modal::backdrop {
     background: var(--pf-modal-backdrop);
-    backdrop-filter: blur(8px) saturate(1.8);
-    -webkit-backdrop-filter: blur(8px) saturate(1.8);
   }
 
   #search-modal[open] {
@@ -789,23 +785,18 @@ const bookMap = Object.fromEntries(books.map(b => [b.slug, b.title]));
     --pf-border: var(--border);
     --pf-mark: var(--accent);
 
-    --pf-modal-backdrop: rgba(0, 0, 0, 0.4);
+    --pf-modal-backdrop: var(--overlay-backdrop);
     --pf-modal-max-width: 560px;
     --pf-modal-max-height: min(80dvh, 720px);
     --pf-modal-top: 12dvh;
 
-    --pf-shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-    --pf-border-radius: 8px;
+    --pf-shadow-lg: var(--overlay-shadow);
+    --pf-border-radius: var(--surface-radius);
 
     --pf-input-height: 44px;
     --pf-input-font-size: 16px;
     --pf-result-title-font-size: 14px;
     --pf-result-excerpt-font-size: 13px;
-  }
-
-  html[data-theme="dark"] {
-    --pf-modal-backdrop: rgba(0, 0, 0, 0.6);
-    --pf-shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   }
 
   @media (max-width: 639px) {
@@ -815,6 +806,8 @@ const bookMap = Object.fromEntries(books.map(b => [b.slug, b.title]));
       max-height: 80dvh;
       margin: auto auto 0;
       border-radius: 8px 8px 0 0;
+      border-bottom: 0;
+      box-shadow: var(--sheet-shadow);
     }
 
     .search-modal-inner {

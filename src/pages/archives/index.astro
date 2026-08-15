@@ -7,33 +7,26 @@ import Footer from "@/components/Footer.astro";
 import Card from "@/components/Card.astro";
 import getPostsByGroupCondition from "@/utils/getPostsByGroupCondition";
 import config from "@/config";
-import { useTranslations } from "@/i18n";
+import { getLocaleFromPath, useTranslations } from "@/i18n";
+import { resolveLocalizedEntries } from "@/utils/localizedContent";
 
 if (!config.features.showArchives) {
   return Astro.redirect("/404");
 }
 
-const t = useTranslations(config.site.lang);
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
 
-const posts = await getCollection("blog", ({ data }) => !data.draft);
+const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+const posts = resolveLocalizedEntries(allPosts, "blog", locale);
 
-const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
 ---
 
-<Layout title={`${t.pages.archivesTitle} | ${config.site.title}`}>
+<Layout
+  title={`${t.pages.archivesTitle} | ${config.site.title}`}
+  localeAlternates
+>
   <Header />
   <Main pageTitle={t.pages.archivesTitle} pageDesc={t.pages.archivesDesc}>
     {
@@ -57,7 +50,9 @@ const months = [
               .map(([month, monthGroup]) => (
                 <div class="flex flex-col sm:flex-row">
                   <div class="mt-6 min-w-36 text-lg sm:my-6">
-                    <span class="font-bold">{months[Number(month) - 1]}</span>
+                    <span class="font-bold">
+                      {monthFormatter.format(new Date(2024, Number(month) - 1))}
+                    </span>
                     <sup class="text-xs">{monthGroup.length}</sup>
                   </div>
                   <ul>
@@ -72,7 +67,7 @@ const months = [
                           )
                       )
                       .map(data => (
-                        <Card {...data} />
+                        <Card requestedLocale={locale} {...data} />
                       ))}
                   </ul>
                 </div>

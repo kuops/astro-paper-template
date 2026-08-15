@@ -1,6 +1,14 @@
 import type { UIStrings } from "../types";
 
 export default {
+  language: {
+    switchLanguage: "Switch language",
+    names: {
+      zh: "中文",
+      en: "English",
+    },
+    sourceLabel: "Source: {{language}}",
+  },
   nav: {
     home: "Home",
     posts: "Posts",
@@ -37,7 +45,7 @@ export default {
     allPosts: "All Posts",
   },
   footer: {
-    copyright: "Copyright",
+    copyright: "Copyright © {{year}}",
     allRightsReserved: "All rights reserved.",
   },
   pages: {

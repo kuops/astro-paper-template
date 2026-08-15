@@ -1,16 +1,32 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import type { Locale } from "@/types/config";
 import { getPath } from "@/utils/getPath";
+import { getContentLocale } from "@/utils/localizedContent";
 import { toTransitionName } from "@/utils/toTransitionName";
+import { getLocaleFromPath, tplStr, useTranslations } from "@/i18n";
 import Datetime from "./Datetime.astro";
 
 type Props = {
   variant?: "h2" | "h3";
+  requestedLocale?: Locale;
 } & CollectionEntry<"blog">;
 
-const { variant: Heading = "h2", id, data, filePath } = Astro.props;
+const {
+  variant: Heading = "h2",
+  requestedLocale = getLocaleFromPath(Astro.url.pathname),
+  id,
+  data,
+  filePath,
+} = Astro.props;
 
 const { title, description, ...props } = data;
+const sourceLocale = getContentLocale({ filePath }, "blog");
+const isFallback = sourceLocale !== requestedLocale;
+const t = useTranslations(requestedLocale);
+const sourceLabel = tplStr(t.language.sourceLabel, {
+  language: t.language.names[sourceLocale],
+});
 ---
 
 <li class="my-6">
@@ -24,8 +40,15 @@ const { title, description, ...props } = data;
   >
     <Heading style={{ viewTransitionName: toTransitionName(title) }}>
       {title}
+      {
+        isFallback && (
+          <span class="ms-2 align-middle text-xs font-normal text-foreground/55">
+            ({sourceLabel})
+          </span>
+        )
+      }
     </Heading>
   </a>
   <Datetime {...props} />
-  <p>{description}</p>
+  <p class="line-clamp-2 font-reading md:line-clamp-none">{description}</p>
 </li>

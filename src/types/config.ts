@@ -1,3 +1,5 @@
+type Locale = "zh" | "en";
+
 interface SiteConfig {
   url: string;
   title: string;
@@ -5,10 +7,14 @@ interface SiteConfig {
   author: string;
   profile?: string;
   ogImage?: string;
-  lang?: string;
+  lang?: Locale;
   timezone?: string;
   dir?: "ltr" | "rtl";
   googleVerification?: string;
+}
+
+interface I18nConfig {
+  locales?: Locale[];
 }
 
 interface PostsConfig {
@@ -45,6 +51,7 @@ interface ShareLink {
 
 interface AstroPaperConfig {
   site: SiteConfig;
+  i18n?: I18nConfig;
   posts?: PostsConfig;
   features?: FeaturesConfig;
   socials?: SocialLink[];
@@ -68,6 +75,7 @@ type ResolvedSiteConfig = Required<
 
 export interface ResolvedAstroPaperConfig {
   site: ResolvedSiteConfig;
+  i18n: Required<I18nConfig>;
   posts: Required<PostsConfig>;
   features: Required<FeaturesConfig>;
   socials: SocialLink[];
@@ -80,6 +88,8 @@ function defineAstroPaperConfig(config: AstroPaperConfig): AstroPaperConfig {
 
 export type {
   SiteConfig,
+  I18nConfig,
+  Locale,
   PostsConfig,
   FeaturesConfig,
   SocialLink,

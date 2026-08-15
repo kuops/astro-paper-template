@@ -1,8 +1,7 @@
 ---
-import config from "@/config";
-import { useTranslations } from "@/i18n";
+import { getLocaleFromPath, useTranslations } from "@/i18n";
 
-const t = useTranslations(config.site.lang);
+const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
 
 interface Heading {
   depth: number;
@@ -121,7 +120,7 @@ const minDepth =
     margin-inline-start: -1px;
     border-inline-start: 2px solid var(--accent);
     border-radius: 0 0.375rem 0.375rem 0;
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
   }
   .toc-item.active .toc-link {
     color: var(--foreground);
