@@ -1,6 +1,7 @@
 ---
 import type { SidebarGroup } from "@/types/books";
 import { getLocaleFromPath, getLocalizedPath, useTranslations } from "@/i18n";
+import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
 import type { Locale } from "@/types/config";
 
 const locale = getLocaleFromPath(Astro.url.pathname);
@@ -71,17 +72,11 @@ const {
           data-book-group={group.text}
         >
           <summary class="book-group-title">
-            <svg
-              class="book-group-arrow"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              width="12"
-              height="12"
-              aria-hidden="true"
-            >
-              <path d="M6 3.5L10.5 8L6 12.5z" />
-            </svg>
             <span>{group.text}</span>
+            <IconChevronRight
+              class="book-group-arrow size-4"
+              aria-hidden="true"
+            />
           </summary>
           <div class="book-group-body">{links}</div>
         </details>
@@ -180,8 +175,10 @@ const {
   }
   .book-group-arrow {
     flex-shrink: 0;
+    margin-inline-start: auto;
+    color: var(--accent);
+    opacity: 0.75;
     transition: transform 0.2s ease;
-    opacity: 0.5;
   }
   details[open] > .book-group-title .book-group-arrow {
     transform: rotate(90deg);
