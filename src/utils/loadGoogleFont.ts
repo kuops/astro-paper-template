@@ -21,12 +21,19 @@ async function loadLocalFonts(): Promise<
     },
   ];
 
-  return fontsConfig.map(({ name, file, weight, style }) => ({
-    name,
-    data: readFileSync(join(fontDir, file)).buffer as ArrayBuffer,
-    weight,
-    style,
-  }));
+  return fontsConfig.map(({ name, file, weight, style }) => {
+    const font = readFileSync(join(fontDir, file));
+
+    return {
+      name,
+      data: font.buffer.slice(
+        font.byteOffset,
+        font.byteOffset + font.byteLength
+      ) as ArrayBuffer,
+      weight,
+      style,
+    };
+  });
 }
 
 export default loadLocalFonts;
