@@ -7,6 +7,10 @@ html[data-theme="light"] {
   --muted: #e6e6e6;
   --muted-foreground: #737373;
   --border: #ece9e9;
+  --surface-radius: 0.5rem;
+  --overlay-backdrop: rgb(0 0 0 / 36%);
+  --overlay-shadow: 0 12px 32px rgb(0 0 0 / 14%);
+  --sheet-shadow: 0 -8px 24px rgb(0 0 0 / 14%);
 }
 
 html[data-theme="dark"] {
@@ -17,4 +21,8 @@ html[data-theme="dark"] {
   --muted: #353c4d;
   --muted-foreground: #a0a0a0;
   --border: #3e4451;
+  --surface-radius: 0.5rem;
+  --overlay-backdrop: rgb(0 0 0 / 56%);
+  --overlay-shadow: 0 12px 32px rgb(0 0 0 / 35%);
+  --sheet-shadow: 0 -8px 24px rgb(0 0 0 / 35%);
 }

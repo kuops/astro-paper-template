@@ -1,0 +1,94 @@
+---
+import {
+  buildHrefMap,
+  buildSidebar,
+  buildTitleMap,
+  getAllBooks,
+  getBookEntries,
+  getChapterSlug,
+  getFlatItems,
+  isBookIndex,
+  isGroupIndex,
+  buildSourceLocaleMap,
+} from "@/utils/books";
+import BookChapterContent from "@/components/BookChapterContent.astro";
+import config from "@/config";
+import { getCollection } from "astro:content";
+import { getLocalizedPath, getSecondaryLocales, resolveLocale } from "@/i18n";
+import { getContentLocale, getTranslationKey } from "@/utils/localizedContent";
+
+export async function getStaticPaths() {
+  const paths = [];
+
+  for (const locale of getSecondaryLocales()) {
+    const books = await getAllBooks(locale);
+
+    for (const book of books) {
+      const entries = await getBookEntries(book.slug, locale);
+
+      for (const entry of entries) {
+        if (isBookIndex(entry) || isGroupIndex(entry)) continue;
+        const slug = getChapterSlug(entry);
+        if (!slug) continue;
+        paths.push({
+          params: { locale, book: book.slug, slug },
+          props: {
+            chapter: entry,
+            entries,
+            bookTitle: book.title,
+          },
+        });
+      }
+    }
+  }
+
+  return paths;
+}
+
+const { chapter, entries, bookTitle } = Astro.props;
+const { book, slug } = Astro.params;
+const sidebar = buildSidebar(book!, entries);
+const titleMap = buildTitleMap(entries, book!);
+const locale = resolveLocale(Astro.params.locale);
+const sourceLocale = getContentLocale(chapter, "books");
+const hrefMap = buildHrefMap(entries, book!, locale);
+const sourceLocaleMap = buildSourceLocaleMap(entries, book!);
+const flatItems = getFlatItems(sidebar);
+const currentIndex = flatItems.indexOf(slug!);
+const prevSlug = currentIndex > 0 ? flatItems[currentIndex - 1] : null;
+const nextSlug =
+  currentIndex < flatItems.length - 1 ? flatItems[currentIndex + 1] : null;
+
+const allBookEntries = await getCollection("books", ({ data }) => !data.draft);
+const sourceEntry = allBookEntries.find(
+  candidate =>
+    getTranslationKey(candidate, "books") ===
+      getTranslationKey(chapter, "books") &&
+    getContentLocale(candidate, "books") === config.site.lang
+);
+const alternateUrl = sourceEntry
+  ? getLocalizedPath(`/books/${book}/${slug}`, config.site.lang)
+  : getLocalizedPath("/books", config.site.lang);
+const canonicalURL =
+  sourceLocale !== locale
+    ? new URL(
+        getLocalizedPath(`/books/${book}/${slug}`, sourceLocale),
+        Astro.url
+      ).href
+    : undefined;
+---
+
+<BookChapterContent
+  {chapter}
+  book={book!}
+  {bookTitle}
+  slug={slug!}
+  {sidebar}
+  {titleMap}
+  {hrefMap}
+  {sourceLocaleMap}
+  {prevSlug}
+  {nextSlug}
+  {alternateUrl}
+  {canonicalURL}
+/>

@@ -1,6 +1,17 @@
 import type { UIStrings } from "../types";
 
 export default {
+  reading: {
+    metadata: "{{minutes}} min read · {{count}} words",
+  },
+  language: {
+    switchLanguage: "Switch language",
+    names: {
+      zh: "中文",
+      en: "English",
+    },
+    sourceLabel: "Source: {{language}}",
+  },
   nav: {
     home: "Home",
     posts: "Posts",
@@ -37,7 +48,7 @@ export default {
     allPosts: "All Posts",
   },
   footer: {
-    copyright: "Copyright",
+    copyright: "Copyright © {{year}}",
     allRightsReserved: "All rights reserved.",
   },
   pages: {
@@ -70,6 +81,8 @@ export default {
     searchHintNavigate: "navigate",
     searchHintOpen: "open",
     searchHintClose: "close",
+    clearSearch: "Clear search",
+    headingAnchor: "Link to section: {{title}}",
   },
   notFound: {
     title: "404 Not Found",
@@ -81,6 +94,14 @@ export default {
     nextChapter: "Next Chapter",
     tableOfContents: "Contents",
     chapterNav: "Chapter Navigation",
+    backToBooks: "Back to books",
+    openChapterNav: "Open chapter navigation",
+    closeChapterNav: "Close chapter navigation",
+    chapters: "Chapters",
+    onThisPage: "On this page",
+    chapterProgress: "Chapter {{current}} of {{total}}",
+    allChapters: "All chapters",
+    startReading: "Start reading",
   },
   booksPage: {
     title: "Books",

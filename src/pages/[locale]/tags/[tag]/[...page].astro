@@ -1,0 +1,31 @@
+---
+import type { GetStaticPathsOptions } from "astro";
+import { getCollection } from "astro:content";
+import TagPage from "../../../tags/[tag]/[...page].astro";
+import config from "@/config";
+import { getSecondaryLocales } from "@/i18n";
+import getPostsByTag from "@/utils/getPostsByTag";
+import getUniqueTags from "@/utils/getUniqueTags";
+import { resolveLocalizedEntries } from "@/utils/localizedContent";
+
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
+  const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+
+  return getSecondaryLocales().flatMap(locale => {
+    const posts = resolveLocalizedEntries(allPosts, "blog", locale);
+    const tags = getUniqueTags(posts);
+
+    return tags.flatMap(({ tag, tagName }) =>
+      paginate(getPostsByTag(posts, tag), {
+        params: { locale, tag },
+        props: { tagName },
+        pageSize: config.posts.perPage,
+      })
+    );
+  });
+}
+
+const { page, tagName } = Astro.props;
+---
+
+<TagPage {page} {tagName} />

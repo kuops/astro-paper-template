@@ -2,6 +2,9 @@
 import type { CollectionEntry } from "astro:content";
 import IconEdit from "@/assets/icons/IconEdit.svg";
 import config from "@/config";
+import { getLocaleFromPath, useTranslations } from "@/i18n";
+
+const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
 
 type Props = {
   hideEditPost?: CollectionEntry<"blog">["data"]["hideEditPost"];
@@ -30,7 +33,7 @@ const showEditPost =
       ]}
     >
       <IconEdit class="inline-block" />
-      <span>Edit page</span>
+      <span>{t.post.editPage}</span>
     </a>
   )
 }

@@ -18,17 +18,35 @@ import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
 import ArticleEnhancements from "@/components/ArticleEnhancements.astro";
 import MermaidRenderer from "@/components/MermaidRenderer.astro";
 import ImageLightbox from "@/components/ImageLightbox.astro";
+import ReadingMetadata from "@/components/ReadingMetadata.astro";
 import config from "@/config";
-import { useTranslations } from "@/i18n";
-const t = useTranslations(config.site.lang);
+import {
+  getLocaleFromPath,
+  getLocalizedPath,
+  tplStr,
+  useTranslations,
+} from "@/i18n";
+import type { Locale } from "@/types/config";
+import { getContentLocale } from "@/utils/localizedContent";
+import { getReadingMetadata } from "@/utils/readingMetadata";
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
 
 type Props = {
   post: CollectionEntry<"blog">;
   prevPost: CollectionEntry<"blog"> | null;
   nextPost: CollectionEntry<"blog"> | null;
+  alternateUrl?: string;
+  alternateURLs?: Partial<Record<Locale, string>>;
 };
 
-const { post, prevPost, nextPost } = Astro.props;
+const { post, prevPost, nextPost, alternateUrl, alternateURLs } = Astro.props;
+const sourceLocale = getContentLocale(post, "blog");
+const contentT = useTranslations(sourceLocale);
+const isFallback = sourceLocale !== locale;
+const sourceLabel = tplStr(t.language.sourceLabel, {
+  language: t.language.names[sourceLocale],
+});
 
 const {
   title,
@@ -44,6 +62,11 @@ const {
 } = post.data;
 
 const { Content, headings: allHeadings } = await render(post);
+const readingMetadata = getReadingMetadata(post.body, sourceLocale);
+const readingLabel = tplStr(contentT.reading.metadata, {
+  count: readingMetadata.count,
+  minutes: readingMetadata.minutes,
+});
 
 const headings = allHeadings.filter(h => h.depth >= 2 && h.depth <= 4);
 
@@ -72,16 +95,21 @@ const layoutProps = {
   description,
   pubDatetime,
   modDatetime,
-  canonicalURL,
+  canonicalURL: isFallback
+    ? new URL(
+        getLocalizedPath(getPath(post.id, post.filePath), sourceLocale),
+        Astro.url
+      ).href
+    : canonicalURL,
   ogImage,
-  scrollSmooth: true,
+  alternateURLs,
 };
 
 /* ========== Prev/Next Posts ========== */
 ---
 
 <Layout {...layoutProps}>
-  <Header maxWidth="mx-auto w-full max-w-5xl px-4" />
+  <Header maxWidth="mx-auto w-full max-w-5xl px-4" {alternateUrl} />
   <main
     id="main-content"
     class:list={["mx-auto w-full max-w-5xl px-4 pb-12"]}
@@ -91,14 +119,20 @@ const layoutProps = {
     <BackButton />
     <div class="flex gap-8">
       <div class="min-w-0 flex-1">
+        {
+          isFallback && (
+            <p class="mb-3 text-sm text-foreground/55">{sourceLabel}</p>
+          )
+        }
         <h1
           transition:name={slugifyStr(title.replaceAll(".", "-"))}
-          class="inline-block text-2xl font-bold text-accent sm:text-3xl"
+          class="inline-block text-[1.75rem] leading-9 font-bold text-accent sm:text-3xl"
         >
           {title}
         </h1>
-        <div class="my-2 flex items-center gap-2">
+        <div class="my-2 flex flex-wrap items-center gap-x-3 gap-y-1">
           <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
+          <ReadingMetadata label={readingLabel} />
           <span
             aria-hidden="true"
             class:list={[
@@ -147,10 +181,13 @@ const layoutProps = {
       {
         prevPost && (
           <a
-            href={getPath(prevPost.id, prevPost.filePath)}
-            class="flex w-full gap-1 hover:opacity-75"
+            href={getLocalizedPath(
+              getPath(prevPost.id, prevPost.filePath),
+              locale
+            )}
+            class="group flex w-full gap-1 hover:opacity-75"
           >
-            <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
+            <IconChevronLeft class="inline-block flex-none motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:-translate-x-0.5 rtl:rotate-180" />
             <div>
               <span>{t.post.previousPost}</span>
               <div class="text-sm text-accent/85">{prevPost.data.title}</div>
@@ -161,14 +198,17 @@ const layoutProps = {
       {
         nextPost && (
           <a
-            href={getPath(nextPost.id, nextPost.filePath)}
-            class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"
+            href={getLocalizedPath(
+              getPath(nextPost.id, nextPost.filePath),
+              locale
+            )}
+            class="group flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"
           >
             <div>
               <span>{t.post.nextPost}</span>
               <div class="text-sm text-accent/85">{nextPost.data.title}</div>
             </div>
-            <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
+            <IconChevronRight class="inline-block flex-none motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:translate-x-0.5 rtl:rotate-180" />
           </a>
         )
       }

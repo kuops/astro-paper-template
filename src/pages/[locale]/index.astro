@@ -1,0 +1,10 @@
+---
+import IndexPage from "../index.astro";
+import { getSecondaryLocalePaths } from "@/i18n";
+
+export function getStaticPaths() {
+  return getSecondaryLocalePaths();
+}
+---
+
+<IndexPage />

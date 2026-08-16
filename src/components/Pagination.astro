@@ -4,9 +4,8 @@ import type { CollectionEntry } from "astro:content";
 import IconArrowLeft from "@/assets/icons/IconArrowLeft.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import LinkButton from "./LinkButton.astro";
-import config from "@/config";
-import { useTranslations } from "@/i18n";
-const t = useTranslations(config.site.lang);
+import { getLocaleFromPath, useTranslations } from "@/i18n";
+const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
 
 type Props = {
   page: Page<CollectionEntry<"blog">>;

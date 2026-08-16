@@ -1,0 +1,14 @@
+---
+import IconClock from "@/assets/icons/IconClock.svg";
+
+interface Props {
+  label: string;
+}
+
+const { label } = Astro.props;
+---
+
+<span class="flex items-center gap-x-2 opacity-80">
+  <IconClock class="inline-block size-6 min-w-5.5 scale-90" />
+  <span class="text-sm sm:text-base">{label}</span>
+</span>

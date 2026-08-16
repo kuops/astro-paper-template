@@ -3,10 +3,13 @@ import { getCollection } from "astro:content";
 import { getPath } from "@/utils/getPath";
 import getSortedPosts from "@/utils/getSortedPosts";
 import config from "@/config";
+import { resolveLocalizedEntries } from "@/utils/localizedContent";
 
 export async function GET() {
-  const posts = await getCollection("blog");
-  const sortedPosts = getSortedPosts(posts);
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  const sortedPosts = getSortedPosts(
+    resolveLocalizedEntries(posts, "blog", config.site.lang)
+  );
   return rss({
     title: config.site.title,
     description: config.site.description,

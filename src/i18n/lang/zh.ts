@@ -1,6 +1,17 @@
 import type { UIStrings } from "../types";
 
 export default {
+  reading: {
+    metadata: "约 {{minutes}} 分钟 · {{count}} 字",
+  },
+  language: {
+    switchLanguage: "切换语言",
+    names: {
+      zh: "中文",
+      en: "English",
+    },
+    sourceLabel: "{{language}}原文",
+  },
   nav: {
     home: "首页",
     posts: "文章",
@@ -37,7 +48,7 @@ export default {
     allPosts: "所有文章",
   },
   footer: {
-    copyright: "版权所有",
+    copyright: "© {{year}}",
     allRightsReserved: "保留所有权利。",
   },
   pages: {
@@ -70,6 +81,8 @@ export default {
     searchHintNavigate: "导航",
     searchHintOpen: "打开",
     searchHintClose: "关闭",
+    clearSearch: "清除搜索",
+    headingAnchor: "章节链接：{{title}}",
   },
   notFound: {
     title: "404",
@@ -81,6 +94,14 @@ export default {
     nextChapter: "下一章",
     tableOfContents: "目录",
     chapterNav: "章节导航",
+    backToBooks: "返回书籍",
+    openChapterNav: "打开章节目录",
+    closeChapterNav: "关闭章节目录",
+    chapters: "章节",
+    onThisPage: "本页",
+    chapterProgress: "第 {{current}} / {{total}} 章",
+    allChapters: "全部章节",
+    startReading: "开始阅读",
   },
   booksPage: {
     title: "书籍",

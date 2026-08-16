@@ -1,8 +1,7 @@
 ---
-import config from "@/config";
-import { useTranslations } from "@/i18n";
+import { getLocaleFromPath, useTranslations } from "@/i18n";
 
-const t = useTranslations(config.site.lang);
+const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
 
 interface Heading {
   depth: number;
@@ -26,7 +25,7 @@ const minDepth =
   >
     {t.pages.toc}
   </h2>
-  <ul class="space-y-1 border-s-2 border-border text-sm">
+  <ul class="space-y-0.5 border-s border-border text-sm">
     {
       headings.map(({ depth, slug, text }) => {
         const indent = depth - minDepth;
@@ -37,7 +36,7 @@ const minDepth =
           >
             <a
               href={`#${slug}`}
-              class="toc-link block truncate py-0.5 pe-2 text-foreground/60 transition-colors hover:text-accent"
+              class="toc-link block truncate rounded-e-md px-2 py-1 text-foreground/65 transition-colors hover:bg-foreground/5 hover:text-accent"
               data-heading-slug={slug}
             >
               {text}
@@ -51,16 +50,23 @@ const minDepth =
 
 <script is:inline data-astro-rerun>
   function initTocHighlight() {
-    const tocLinks = document.querySelectorAll(".toc-link");
+    const toc = document.querySelector(".toc");
+    if (!toc) return;
+    toc.__tocCleanup?.();
+
+    const tocLinks = toc.querySelectorAll(".toc-link");
     if (tocLinks.length === 0) return;
 
     const article = document.getElementById("article");
     if (!article) return;
 
     const headings = Array.from(article.querySelectorAll("h2, h3, h4, h5, h6"));
+    const controller = new AbortController();
+    const visibleMedia = window.matchMedia("(min-width: 1280px)");
+    let frameId = 0;
 
     function setActive() {
-      let currentId = "";
+      let currentId = headings[0]?.id || "";
       for (const heading of headings) {
         const rect = heading.getBoundingClientRect();
         if (rect.top <= 120) {
@@ -71,30 +77,53 @@ const minDepth =
       tocLinks.forEach(link => {
         const slug = link.getAttribute("data-heading-slug");
         const li = link.closest(".toc-item");
-        if (slug === currentId) {
-          link.classList.remove("text-foreground/60");
-          link.classList.add("text-accent", "font-medium");
-          if (li) {
-            li.classList.add("active");
-          }
-        } else {
-          link.classList.add("text-foreground/60");
-          link.classList.remove("text-accent", "font-medium");
-          if (li) {
-            li.classList.remove("active");
-          }
-        }
+        const active = slug === currentId;
+        li?.classList.toggle("active", active);
+        if (active) link.setAttribute("aria-current", "location");
+        else link.removeAttribute("aria-current");
       });
     }
 
-    window.addEventListener("scroll", setActive, { passive: true });
-    setActive();
+    function scheduleActive() {
+      if (!visibleMedia.matches || frameId) return;
+      frameId = window.requestAnimationFrame(function () {
+        frameId = 0;
+        setActive();
+      });
+    }
+
+    window.addEventListener("scroll", scheduleActive, {
+      passive: true,
+      signal: controller.signal,
+    });
+    visibleMedia.addEventListener("change", scheduleActive, {
+      signal: controller.signal,
+    });
+    scheduleActive();
+
+    function cleanup() {
+      if (frameId) window.cancelAnimationFrame(frameId);
+      controller.abort();
+    }
+
+    toc.__tocCleanup = cleanup;
+    document.addEventListener("astro:before-swap", cleanup, {
+      once: true,
+      signal: controller.signal,
+    });
   }
   initTocHighlight();
 </script>
 
 <style>
   .toc-item.active {
+    margin-inline-start: -1px;
     border-inline-start: 2px solid var(--accent);
+    border-radius: 0 0.375rem 0.375rem 0;
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
+  }
+  .toc-item.active .toc-link {
+    color: var(--foreground);
+    font-weight: 600;
   }
 </style>

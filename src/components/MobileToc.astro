@@ -1,8 +1,9 @@
 ---
 import IconHash from "@/assets/icons/IconHash.svg";
-import config from "@/config";
-import { useTranslations } from "@/i18n";
-const t = useTranslations(config.site.lang);
+import IconX from "@/assets/icons/IconX.svg";
+import { getLocaleFromPath, useTranslations } from "@/i18n";
+
+const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
 
 interface Heading {
   depth: number;
@@ -15,142 +16,275 @@ type Props = {
 };
 
 const { headings } = Astro.props;
-
-const minDepth =
-  headings.length > 0 ? Math.min(...headings.map(h => h.depth)) : 2;
+const minDepth = Math.min(...headings.map(heading => heading.depth));
 ---
 
-<div class="mobile-toc xl:hidden">
+<div class="mobile-toc xl:hidden" data-mobile-toc>
   <button
-    id="mobile-toc-btn"
-    class="fixed end-2 bottom-[45vh] z-40 flex size-10 translate-x-[65%] items-center justify-center rounded-full bg-background shadow-lg transition-all duration-300 hover:text-accent active:scale-95"
+    type="button"
+    class="fixed end-4 bottom-24 z-40 floating-tool-button"
+    data-mobile-toc-open
     aria-label={t.pages.openToc}
+    title={t.pages.openToc}
+    aria-expanded="false"
+    aria-controls="mobile-toc-dialog"
   >
     <IconHash class="size-5" />
   </button>
 
-  <div
-    id="mobile-toc-overlay"
-    class="pointer-events-none fixed inset-0 z-50 bg-black/40 opacity-0 transition-opacity duration-300"
-    aria-hidden="true"
+  <dialog
+    id="mobile-toc-dialog"
+    class="mobile-toc-dialog"
+    aria-labelledby="mobile-toc-title"
+    data-mobile-toc-dialog
   >
-  </div>
-
-  <div
-    id="mobile-toc-drawer"
-    class="pointer-events-none fixed inset-x-0 bottom-0 z-50 max-h-[50vh] translate-y-full overflow-y-auto overscroll-contain rounded-t-2xl bg-background shadow-2xl transition-transform duration-300 ease-out"
-  >
-    <div
-      class="flex items-center justify-between border-b border-border px-4 py-3"
-    >
-      <h2
-        class="text-sm font-semibold tracking-wider text-foreground/60 uppercase"
-      >
-        {t.pages.toc}
-      </h2>
-      <button
-        id="mobile-toc-close"
-        class="text-foreground/60 transition-colors hover:text-accent"
-        aria-label={t.pages.closeToc}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          ><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path
-            d="M18 6l-12 12"></path><path d="M6 6l12 12"></path></svg
+    <div class="mobile-toc-shell">
+      <div class="mobile-toc-handle" aria-hidden="true"></div>
+      <div class="flex min-h-12 items-center gap-3 px-4">
+        <div
+          id="mobile-toc-title"
+          class="min-w-0 flex-1 text-base font-semibold"
         >
-      </button>
+          {t.pages.toc}
+        </div>
+        <button
+          type="button"
+          class="focus-outline flex size-11 flex-none items-center justify-center rounded-md text-foreground/60 transition-colors hover:bg-foreground/5 hover:text-accent active:bg-foreground/10"
+          data-mobile-toc-close
+          aria-label={t.pages.closeToc}
+          title={t.pages.closeToc}
+        >
+          <IconX class="size-5" />
+        </button>
+      </div>
+
+      <nav class="mobile-toc-list" aria-label={t.pages.toc}>
+        <ul class="border-s border-border text-sm">
+          {
+            headings.map(({ depth, slug, text }) => {
+              const indent = depth - minDepth;
+              return (
+                <li style={`padding-inline-start: ${indent * 0.75 + 0.5}rem`}>
+                  <a
+                    href={`#${slug}`}
+                    class="mobile-toc-link flex min-h-11 items-center rounded-e-md border-s-2 border-transparent px-2 py-2 leading-5 text-foreground/65 transition-colors hover:bg-foreground/5 hover:text-accent"
+                    data-mobile-toc-heading={slug}
+                  >
+                    <span class="mobile-toc-label">{text}</span>
+                  </a>
+                </li>
+              );
+            })
+          }
+        </ul>
+      </nav>
     </div>
-    <nav class="overflow-y-auto p-4" aria-label={t.pages.toc}>
-      <ul class="space-y-1 border-s-2 border-border text-sm">
-        {
-          headings.map(({ depth, slug, text }) => {
-            const indent = depth - minDepth;
-            return (
-              <li
-                class="mobile-toc-item"
-                style={`padding-inline-start: ${indent * 0.75 + 0.75}rem`}
-              >
-                <a
-                  href={`#${slug}`}
-                  class="mobile-toc-link block truncate py-1.5 pe-2 text-foreground/60 transition-colors hover:text-accent"
-                  data-heading-slug={slug}
-                >
-                  {text}
-                </a>
-              </li>
-            );
-          })
-        }
-      </ul>
-    </nav>
-  </div>
+  </dialog>
 </div>
 
 <script is:inline data-astro-rerun>
-  function initMobileToc() {
-    const btn = document.getElementById("mobile-toc-btn");
-    const overlay = document.getElementById("mobile-toc-overlay");
-    const drawer = document.getElementById("mobile-toc-drawer");
-    const closeBtn = document.getElementById("mobile-toc-close");
-    if (!btn || !overlay || !drawer || !closeBtn) return;
+  (function () {
+    const root = document.querySelector("[data-mobile-toc]");
+    if (!root) return;
+    root.__mobileTocCleanup?.();
 
-    let open = false;
-    let hideTimer = null;
+    const controller = new AbortController();
+    const openButton = root.querySelector("[data-mobile-toc-open]");
+    const closeButton = root.querySelector("[data-mobile-toc-close]");
+    const dialog = root.querySelector("[data-mobile-toc-dialog]");
+    const links = Array.from(
+      root.querySelectorAll("[data-mobile-toc-heading]")
+    );
 
-    function expandBtn(show) {
-      if (hideTimer) {
-        clearTimeout(hideTimer);
-        hideTimer = null;
-      }
-      btn.classList.toggle("translate-x-0", show);
-      btn.classList.toggle("translate-x-[65%]", !show);
+    if (!openButton || !closeButton || !dialog) return;
+
+    let previousOverflow = "";
+    let frameId = 0;
+    const visibleMedia = window.matchMedia("(max-width: 1279px)");
+
+    function setActiveHeading() {
+      const article = document.getElementById("article");
+      const articleHeadings = article
+        ? Array.from(article.querySelectorAll("h2, h3, h4"))
+        : [];
+      let currentId = articleHeadings[0]?.id || "";
+      articleHeadings.forEach(function (heading) {
+        if (heading.getBoundingClientRect().top <= 72) currentId = heading.id;
+      });
+      links.forEach(function (link) {
+        const active =
+          link.getAttribute("data-mobile-toc-heading") === currentId;
+        link.classList.toggle("active", active);
+        if (active) link.setAttribute("aria-current", "location");
+        else link.removeAttribute("aria-current");
+      });
     }
 
-    function scheduleHide() {
-      if (hideTimer) clearTimeout(hideTimer);
-      hideTimer = setTimeout(() => {
-        if (!open) expandBtn(false);
-      }, 1500);
+    function scheduleActiveHeading() {
+      if (!visibleMedia.matches || frameId) return;
+      frameId = window.requestAnimationFrame(function () {
+        frameId = 0;
+        setActiveHeading();
+      });
     }
 
-    btn.addEventListener("pointerenter", () => expandBtn(true));
-    btn.addEventListener("pointerleave", () => {
-      if (!open) scheduleHide();
+    function lockScroll() {
+      previousOverflow = document.documentElement.style.overflow;
+      document.documentElement.style.overflow = "hidden";
+    }
+
+    function unlockScroll() {
+      document.documentElement.style.overflow = previousOverflow;
+    }
+
+    function openDialog() {
+      if (dialog.open) return;
+      setActiveHeading();
+      lockScroll();
+      dialog.showModal();
+      openButton.setAttribute("aria-expanded", "true");
+      requestAnimationFrame(function () {
+        const activeLink = dialog.querySelector(".mobile-toc-link.active");
+        (activeLink || closeButton).focus();
+        activeLink?.scrollIntoView({ block: "nearest" });
+      });
+    }
+
+    function closeDialog(restoreFocus) {
+      if (dialog.open) dialog.close();
+      unlockScroll();
+      openButton.setAttribute("aria-expanded", "false");
+      if (restoreFocus) openButton.focus();
+    }
+
+    openButton.addEventListener("click", openDialog, {
+      signal: controller.signal,
     });
-    btn.addEventListener("touchstart", () => expandBtn(true), {
+    closeButton.addEventListener(
+      "click",
+      function () {
+        closeDialog(true);
+      },
+      { signal: controller.signal }
+    );
+    dialog.addEventListener(
+      "click",
+      function (event) {
+        if (event.target === dialog) closeDialog(true);
+      },
+      { signal: controller.signal }
+    );
+    dialog.addEventListener(
+      "close",
+      function () {
+        if (dialog.open) return;
+        unlockScroll();
+        openButton.setAttribute("aria-expanded", "false");
+      },
+      { signal: controller.signal }
+    );
+    links.forEach(function (link) {
+      link.addEventListener(
+        "click",
+        function () {
+          closeDialog(false);
+        },
+        { signal: controller.signal }
+      );
+    });
+
+    window.addEventListener("scroll", scheduleActiveHeading, {
       passive: true,
+      signal: controller.signal,
     });
-    btn.addEventListener("touchend", () => scheduleHide(), { passive: true });
+    visibleMedia.addEventListener("change", scheduleActiveHeading, {
+      signal: controller.signal,
+    });
+    scheduleActiveHeading();
 
-    function toggle(show) {
-      open = show;
-      overlay.classList.toggle("opacity-100", open);
-      overlay.classList.toggle("opacity-0", !open);
-      overlay.classList.toggle("pointer-events-auto", open);
-      overlay.classList.toggle("pointer-events-none", !open);
-      overlay.setAttribute("aria-hidden", String(!open));
-      drawer.classList.toggle("translate-y-0", open);
-      drawer.classList.toggle("translate-y-full", !open);
-      drawer.classList.toggle("pointer-events-auto", open);
-      drawer.classList.toggle("pointer-events-none", !open);
-      if (!open) expandBtn(false);
+    function cleanup() {
+      if (frameId) window.cancelAnimationFrame(frameId);
+      controller.abort();
+      closeDialog(false);
     }
 
-    btn.addEventListener("click", () => toggle(true));
-    overlay.addEventListener("click", () => toggle(false));
-    closeBtn.addEventListener("click", () => toggle(false));
-
-    drawer.querySelectorAll(".mobile-toc-link").forEach(link => {
-      link.addEventListener("click", () => toggle(false));
+    root.__mobileTocCleanup = cleanup;
+    document.addEventListener("astro:before-swap", cleanup, {
+      once: true,
+      signal: controller.signal,
     });
-  }
-  initMobileToc();
+  })();
 </script>
+
+<style>
+  .mobile-toc-dialog {
+    position: fixed;
+    inset: auto 0 0;
+    width: min(100%, 42rem);
+    max-width: none;
+    max-height: 72dvh;
+    margin: auto auto 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-bottom: 0;
+    border-radius: var(--surface-radius) var(--surface-radius) 0 0;
+    color: var(--foreground);
+    background: var(--background);
+    box-shadow: var(--sheet-shadow);
+  }
+  .mobile-toc-dialog::backdrop {
+    background: var(--overlay-backdrop);
+  }
+  .mobile-toc-dialog[open] {
+    animation: mobile-toc-in 0.2s ease-out;
+  }
+  .mobile-toc-shell {
+    display: flex;
+    max-height: 72dvh;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mobile-toc-handle {
+    width: 2.25rem;
+    height: 0.25rem;
+    margin: 0.5rem auto 0.125rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--foreground) 20%, transparent);
+  }
+  .mobile-toc-list {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-top: 1px solid var(--border);
+    padding: 0.75rem;
+  }
+  .mobile-toc-label {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .mobile-toc-link.active {
+    margin-inline-start: -1px;
+    border-inline-start-color: var(--accent);
+    color: var(--foreground);
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
+    font-weight: 600;
+  }
+  @keyframes mobile-toc-in {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-toc-dialog[open] {
+      animation: none;
+    }
+  }
+</style>

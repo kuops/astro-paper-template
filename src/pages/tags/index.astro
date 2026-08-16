@@ -7,16 +7,19 @@ import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import getUniqueTags from "@/utils/getUniqueTags";
 import config from "@/config";
-import { useTranslations } from "@/i18n";
+import { getLocaleFromPath, useTranslations } from "@/i18n";
+import { resolveLocalizedEntries } from "@/utils/localizedContent";
 
-const posts = await getCollection("blog");
+const locale = getLocaleFromPath(Astro.url.pathname);
+const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+const posts = resolveLocalizedEntries(allPosts, "blog", locale);
 
 let tags = getUniqueTags(posts);
 
-const t = useTranslations(config.site.lang);
+const t = useTranslations(locale);
 ---
 
-<Layout title={`${t.pages.tagsTitle} | ${config.site.title}`}>
+<Layout title={`${t.pages.tagsTitle} | ${config.site.title}`} localeAlternates>
   <Header />
   <Main pageTitle={t.pages.tagsTitle} pageDesc={t.pages.tagsDesc}>
     <ul class="flex flex-wrap gap-6">

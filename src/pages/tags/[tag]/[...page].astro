@@ -10,9 +10,12 @@ import Pagination from "@/components/Pagination.astro";
 import getUniqueTags from "@/utils/getUniqueTags";
 import getPostsByTag from "@/utils/getPostsByTag";
 import config from "@/config";
+import { getLocaleFromPath, getLocalizedPath, useTranslations } from "@/i18n";
+import { resolveLocalizedEntries } from "@/utils/localizedContent";
 
 export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
-  const posts = await getCollection("blog");
+  const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+  const posts = resolveLocalizedEntries(allPosts, "blog", config.site.lang);
   const tags = getUniqueTags(posts);
 
   return tags.flatMap(({ tag, tagName }) => {
@@ -29,18 +32,30 @@ export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
 const params = Astro.params;
 const { tag } = params;
 const { page, tagName } = Astro.props;
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
+
+const alternateLocale = config.i18n.locales.find(l => l !== locale);
+const tagPath =
+  page.currentPage > 1 ? `/tags/${tag}/${page.currentPage}` : `/tags/${tag}`;
+const alternateUrl = alternateLocale
+  ? getLocalizedPath(tagPath, alternateLocale)
+  : undefined;
 ---
 
-<Layout title={`Tag: ${tagName} | ${config.site.title}`}>
-  <Header />
+<Layout
+  title={`${t.pages.tagTitle}: ${tagName} | ${config.site.title}`}
+  localeAlternates
+>
+  <Header {alternateUrl} />
   <Main
-    pageTitle={[`Tag:`, `${tagName}`]}
+    pageTitle={[`${t.pages.tagTitle}:`, `${tagName}`]}
     titleTransition={tag}
-    pageDesc={`All the articles with the tag "${tagName}".`}
+    pageDesc={`${t.pages.tagDesc} "${tagName}".`}
   >
-    <h1 slot="title" transition:name={tag}>{`Tag:${tag}`}</h1>
+    <h1 slot="title" transition:name={tag}>{`${t.pages.tagTitle}:${tag}`}</h1>
     <ul>
-      {page.data.map(data => <Card {...data} />)}
+      {page.data.map(data => <Card requestedLocale={locale} {...data} />)}
     </ul>
   </Main>
 

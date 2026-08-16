@@ -7,8 +7,14 @@
 
 @theme inline {
   --font-app:
-    var(--font-google-sans-code), var(--font-noto-sans-sc), sans-serif;
-  --font-mono: var(--font-google-sans-code), ui-monospace, monospace;
+    var(--font-google-sans-code), "Noto Sans SC", "PingFang SC",
+    "Microsoft YaHei", sans-serif;
+  --font-mono:
+    var(--font-google-sans-code), "Noto Sans SC", "PingFang SC",
+    "Microsoft YaHei", ui-monospace, monospace;
+  --font-reading:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
@@ -19,16 +25,13 @@
 }
 
 @layer base {
-  html[data-fonts-loading] body {
-    visibility: hidden;
-  }
   * {
     @apply border-border outline-accent/75;
     scrollbar-width: auto;
     scrollbar-color: var(--color-muted) transparent;
   }
   html {
-    @apply overflow-y-scroll scroll-smooth;
+    @apply overflow-y-scroll;
   }
   body {
     @apply flex min-h-svh flex-col bg-background font-app text-foreground selection:bg-accent/75 selection:text-background;
@@ -51,8 +54,12 @@
   @apply mx-auto w-full max-w-app px-4;
 }
 
+@utility floating-tool-button {
+  @apply flex size-11 items-center justify-center rounded-md border border-border bg-background shadow-sm transition-colors hover:border-accent hover:text-accent active:bg-foreground/5;
+}
+
 .active-nav {
-  @apply underline decoration-wavy decoration-2 underline-offset-8;
+  @apply underline decoration-accent decoration-wavy decoration-2 underline-offset-8;
 }
 
 /* Source: https://piccalil.li/blog/a-more-modern-css-reset/ */

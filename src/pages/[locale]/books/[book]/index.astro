@@ -1,0 +1,80 @@
+---
+import {
+  buildHrefMap,
+  buildSidebar,
+  buildTitleMap,
+  getAllBooks,
+  getBookEntries,
+  getChapterEntry,
+  getFirstChapter,
+  getFlatItems,
+  buildSourceLocaleMap,
+} from "@/utils/books";
+import BookChapterContent from "@/components/BookChapterContent.astro";
+import config from "@/config";
+import { getLocalizedPath, getSecondaryLocales, resolveLocale } from "@/i18n";
+
+export async function getStaticPaths() {
+  const paths = [];
+
+  for (const locale of getSecondaryLocales()) {
+    const books = await getAllBooks(locale);
+
+    for (const book of books) {
+      const entries = await getBookEntries(book.slug, locale);
+      const firstSlug = getFirstChapter(book.slug, entries);
+      if (!firstSlug) continue;
+      const chapter = getChapterEntry(entries, book.slug, firstSlug);
+      if (!chapter) continue;
+      paths.push({
+        params: { locale, book: book.slug },
+        props: {
+          chapter,
+          entries,
+          slug: firstSlug,
+          bookTitle: book.title,
+          sourceLocale: book.sourceLocale,
+        },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { chapter, entries, slug, bookTitle, sourceLocale } = Astro.props;
+const locale = resolveLocale(Astro.params.locale);
+const { book } = Astro.params;
+const hrefMap = buildHrefMap(entries, book!, locale);
+const sourceLocaleMap = buildSourceLocaleMap(entries, book!);
+
+const sidebar = buildSidebar(book!, entries);
+const titleMap = buildTitleMap(entries, book!);
+const flatItems = getFlatItems(sidebar);
+const currentIndex = flatItems.indexOf(slug);
+const prevSlug = currentIndex > 0 ? flatItems[currentIndex - 1] : null;
+const nextSlug =
+  currentIndex < flatItems.length - 1 ? flatItems[currentIndex + 1] : null;
+
+const alternateUrl = getLocalizedPath(`/books/${book}`, config.site.lang);
+const canonicalURL =
+  sourceLocale !== locale
+    ? new URL(getLocalizedPath(`/books/${book}`, sourceLocale), Astro.url).href
+    : undefined;
+---
+
+<BookChapterContent
+  {chapter}
+  book={book!}
+  {bookTitle}
+  {slug}
+  {sidebar}
+  {titleMap}
+  {hrefMap}
+  {sourceLocaleMap}
+  {prevSlug}
+  {nextSlug}
+  indexable={false}
+  {alternateUrl}
+  {canonicalURL}
+/>

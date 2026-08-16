@@ -10,17 +10,20 @@ import getSortedPosts from "@/utils/getSortedPosts";
 import IconRss from "@/assets/icons/IconRss.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import config from "@/config";
-import { useTranslations } from "@/i18n";
-const t = useTranslations(config.site.lang);
+import { getLocaleFromPath, getLocalizedPath, useTranslations } from "@/i18n";
+import { resolveLocalizedEntries } from "@/utils/localizedContent";
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
 
-const posts = await getCollection("blog");
+const allPosts = await getCollection("blog", ({ data }) => !data.draft);
+const posts = resolveLocalizedEntries(allPosts, "blog", locale);
 
 const sortedPosts = getSortedPosts(posts);
 const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
 const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 ---
 
-<Layout>
+<Layout localeAlternates>
   <Header />
   <main id="main-content" data-layout="index" class="app-layout">
     <section id="hero" class:list={["pt-8 pb-6", "border-b border-border"]}>
@@ -29,7 +32,7 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
       </h1>
       <a
         target="_blank"
-        href="/rss.xml"
+        href={getLocalizedPath("/rss.xml", locale)}
         class="inline-block"
         aria-label="rss feed"
         title="RSS Feed"
@@ -42,13 +45,13 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
         <span class="sr-only">RSS Feed</span>
       </a>
 
-      <p>
+      <p class="font-reading leading-7">
         AstroPaper is a minimal, responsive, accessible and SEO-friendly Astro
         blog theme. This theme follows best practices and provides accessibility
         out of the box. Light and dark mode are supported by default. Moreover,
         additional color schemes can also be configured.
       </p>
-      <p class="mt-2">
+      <p class="mt-2 font-reading leading-7">
         Read the blog posts or check
         <LinkButton
           class="underline decoration-dashed underline-offset-4 hover:text-accent"
@@ -84,7 +87,7 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
           </h2>
           <ul>
             {featuredPosts.map(data => (
-              <Card variant="h3" {...data} />
+              <Card variant="h3" requestedLocale={locale} {...data} />
             ))}
           </ul>
         </section>
@@ -100,7 +103,9 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
           <ul>
             {recentPosts.map(
               (data, index) =>
-                index < config.posts.perIndex && <Card variant="h3" {...data} />
+                index < config.posts.perIndex && (
+                  <Card variant="h3" requestedLocale={locale} {...data} />
+                )
             )}
           </ul>
         </section>
@@ -108,7 +113,7 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
     }
 
     <div class="my-8 text-center">
-      <LinkButton href="/posts/">
+      <LinkButton href={getLocalizedPath("/posts/", locale)}>
         {t.home.allPosts}
         <IconArrowRight class="inline-block rtl:-rotate-180" />
       </LinkButton>
@@ -122,7 +127,7 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
     const indexLayout = (document.querySelector("#main-content") as HTMLElement)
       ?.dataset?.layout;
     if (indexLayout) {
-      sessionStorage.setItem("backUrl", "/");
+      sessionStorage.setItem("backUrl", window.location.pathname);
     }
   });
 </script>

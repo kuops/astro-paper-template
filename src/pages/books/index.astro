@@ -6,14 +6,15 @@ import Footer from "@/components/Footer.astro";
 import BookCard from "@/components/BookCard.astro";
 import { getAllBooks } from "@/utils/books";
 import config from "@/config";
-import { useTranslations } from "@/i18n";
+import { getLocaleFromPath, useTranslations } from "@/i18n";
 
-const t = useTranslations(config.site.lang);
+const locale = getLocaleFromPath(Astro.url.pathname);
+const t = useTranslations(locale);
 
-const books = await getAllBooks();
+const books = await getAllBooks(locale);
 ---
 
-<Layout title={`${t.booksPage.title} | ${config.site.title}`}>
+<Layout title={`${t.booksPage.title} | ${config.site.title}`} localeAlternates>
   <Header />
   <Main pageTitle={t.booksPage.title} pageDesc={t.booksPage.description}>
     <div class="grid gap-6 sm:grid-cols-2">
@@ -23,6 +24,9 @@ const books = await getAllBooks();
             slug={book.slug}
             title={book.title}
             description={book.description}
+            href={book.href}
+            sourceLocale={book.sourceLocale}
+            requestedLocale={locale}
           />
         ))
       }

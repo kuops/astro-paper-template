@@ -2,7 +2,7 @@
 
 @layer base {
   .app-prose {
-    @apply prose;
+    @apply prose font-reading;
 
     h1,
     h2,
@@ -12,13 +12,26 @@
       @apply mb-3 text-foreground;
     }
 
+    h1,
+    h2,
+    h3,
+    h4,
     h5,
     h6 {
-      @apply text-foreground;
+      @apply font-app;
+    }
+
+    h2 {
+      @apply text-2xl leading-8;
     }
 
     h3 {
-      @apply italic;
+      @apply text-xl leading-7;
+    }
+
+    h5,
+    h6 {
+      @apply text-foreground;
     }
 
     p,
@@ -121,6 +134,14 @@
 
   html[data-theme="dark"] .astro-code {
     @apply bg-(--shiki-dark-bg) text-(--shiki-dark) [&_span]:text-(--shiki-dark);
+  }
+
+  html[data-theme="dark"] .astro-code span {
+    color: color-mix(
+      in srgb,
+      var(--shiki-dark, var(--foreground)) 80%,
+      white 20%
+    );
   }
 
   .astro-code {

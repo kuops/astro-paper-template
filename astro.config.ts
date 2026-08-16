@@ -14,6 +14,7 @@ import remarkGfm from "remark-gfm";
 import remarkSupersub from "remark-supersub";
 import { remarkMark } from "remark-mark-highlight";
 import rehypeCallouts from "rehype-callouts";
+import rehypeImageDimensions from "./src/utils/rehypeImageDimensions";
 import {
   transformerNotationDiff,
   transformerNotationHighlight,
@@ -22,6 +23,15 @@ import {
 } from "@shikijs/transformers";
 import { transformerFileName } from "./src/utils/transformers/fileName";
 import config from "./astro-paper.config";
+
+const defaultLocale = config.site.lang ?? "en";
+const locales = config.i18n?.locales ?? [defaultLocale];
+
+if (!locales.includes(defaultLocale)) {
+  throw new Error(
+    `The default locale "${defaultLocale}" must be included in i18n.locales.`
+  );
+}
 
 export default defineConfig({
   site: config.site.url,
@@ -33,8 +43,8 @@ export default defineConfig({
     }),
   ],
   i18n: {
-    locales: ["zh"],
-    defaultLocale: "zh",
+    locales,
+    defaultLocale,
     routing: {
       prefixDefaultLocale: false,
     },
@@ -49,7 +59,7 @@ export default defineConfig({
         [remarkGfm, { singleTilde: false }],
         remarkMark,
       ],
-      rehypePlugins: [rehypeCallouts],
+      rehypePlugins: [rehypeCallouts, rehypeImageDimensions],
     }),
     shikiConfig: {
       // For more themes, visit https://shiki.style/themes
@@ -92,21 +102,11 @@ export default defineConfig({
       name: "Google Sans Code",
       cssVariable: "--font-google-sans-code",
       provider: fontProviders.google(),
-      fallbacks: ["sans-serif"],
+      fallbacks: [],
       weights: [300, 400, 500, 600, 700],
       styles: ["normal", "italic"],
-      formats: ["woff", "ttf"],
-      display: "block",
-    },
-    {
-      name: "Noto Sans SC",
-      cssVariable: "--font-noto-sans-sc",
-      provider: fontProviders.google(),
-      fallbacks: ["sans-serif"],
-      weights: [400, 500, 700],
-      styles: ["normal"],
-      formats: ["woff", "ttf"],
-      display: "block",
+      formats: ["woff2"],
+      display: "swap",
     },
   ],
 });

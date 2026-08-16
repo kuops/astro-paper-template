@@ -1,5 +1,13 @@
 import { getCollection, type CollectionEntry } from "astro:content";
+import config from "@/config";
+import { getLocalizedPath } from "@/i18n";
+import type { Locale } from "@/types/config";
 import type { SidebarGroup } from "@/types/books";
+import {
+  getContentLocale,
+  getContentRelativePath,
+  resolveLocalizedEntries,
+} from "@/utils/localizedContent";
 
 type BookEntry = CollectionEntry<"books">;
 
@@ -8,49 +16,66 @@ interface BookMeta {
   title: string;
   description: string;
   order: number;
+  href: string;
+  sourceLocale: Locale;
 }
 
 export function isBookIndex(e: BookEntry) {
-  return e.filePath?.endsWith("/index.md") || e.filePath === "index.md";
+  const path = getContentRelativePath(e, "books");
+  return path.endsWith("/index") || path === "index";
 }
 
 export function isGroupIndex(e: BookEntry) {
-  return e.filePath?.endsWith("/_index.md");
+  return getContentRelativePath(e, "books").endsWith("/_index");
 }
 
-function getBookSlug(id: string) {
-  return id.split("/")[0];
+function getBookSlug(entry: BookEntry) {
+  return getContentRelativePath(entry, "books").split("/")[0];
 }
 
-function getRelativePath(id: string) {
-  return id.split("/").slice(1).join("/");
+function getRelativePath(entry: BookEntry) {
+  return getContentRelativePath(entry, "books").split("/").slice(1).join("/");
 }
 
-function getGroupDir(id: string) {
-  const parts = id.split("/");
+export function getChapterSlug(entry: BookEntry) {
+  return getRelativePath(entry);
+}
+
+function getGroupDir(entry: BookEntry) {
+  const parts = getContentRelativePath(entry, "books").split("/");
   return parts.length >= 3 ? parts[1] : null;
 }
 
-export async function getAllBooks(): Promise<BookMeta[]> {
-  const entries = await getCollection(
-    "books",
-    e => isBookIndex(e) && !e.data.draft
+export async function getAllBooks(
+  locale: Locale = config.site.lang
+): Promise<BookMeta[]> {
+  const allEntries = await getCollection("books", e => !e.data.draft);
+  const entries = resolveLocalizedEntries(allEntries, "books", locale).filter(
+    isBookIndex
   );
   return entries
-    .map(e => ({
-      slug: getBookSlug(e.id),
-      title: e.data.title,
-      description: e.data.description,
-      order: e.data.order ?? 0,
-    }))
+    .map(e => {
+      const slug = getBookSlug(e);
+      const sourceLocale = getContentLocale(e, "books");
+      return {
+        slug,
+        title: e.data.title,
+        description: e.data.description,
+        order: e.data.order ?? 0,
+        href: getLocalizedPath(`/books/${slug}`, locale),
+        sourceLocale,
+      };
+    })
     .sort((a, b) => a.order - b.order);
 }
 
-export async function getBookEntries(bookSlug: string): Promise<BookEntry[]> {
-  const prefix = bookSlug + "/";
-  return getCollection(
-    "books",
-    ({ id, data }) => (id === bookSlug || id.startsWith(prefix)) && !data.draft
+export async function getBookEntries(
+  bookSlug: string,
+  locale: Locale = config.site.lang
+): Promise<BookEntry[]> {
+  const allEntries = await getCollection("books", ({ data }) => !data.draft);
+  return resolveLocalizedEntries(allEntries, "books", locale).filter(
+    entry => getBookSlug(entry) === bookSlug
   );
 }
 
@@ -65,12 +90,12 @@ export function buildSidebar(
   entries: BookEntry[]
 ): SidebarGroup[] {
   const groupIndexEntries = entries.filter(
-    e => getBookSlug(e.id) === bookSlug && isGroupIndex(e)
+    e => getBookSlug(e) === bookSlug && isGroupIndex(e)
   );
 
   const groupMap = new Map<string, GroupMeta>();
   for (const e of groupIndexEntries) {
-    const dir = getGroupDir(e.id)!;
+    const dir = getGroupDir(e)!;
     groupMap.set(dir, {
       dir,
       title: e.data.group || dir,
@@ -79,7 +104,7 @@ export function buildSidebar(
   }
 
   const chapters = entries.filter(
-    e => getBookSlug(e.id) === bookSlug && !isBookIndex(e) && !isGroupIndex(e)
+    e => getBookSlug(e) === bookSlug && !isBookIndex(e) && !isGroupIndex(e)
   );
 
   const hasGroups = groupMap.size > 0;
@@ -91,7 +116,7 @@ export function buildSidebar(
     return [
       {
         text: "",
-        items: sorted.map(e => getRelativePath(e.id)),
+        items: sorted.map(getRelativePath),
       },
     ];
   }
@@ -100,7 +125,7 @@ export function buildSidebar(
   const rootChapters: BookEntry[] = [];
 
   for (const ch of chapters) {
-    const dir = getGroupDir(ch.id);
+    const dir = getGroupDir(ch);
     if (dir && groupMap.has(dir)) {
       if (!groupsByDir.has(dir)) groupsByDir.set(dir, []);
       groupsByDir.get(dir)!.push(ch);
@@ -117,7 +142,7 @@ export function buildSidebar(
     );
     result.push({
       text: "",
-      items: sorted.map(e => getRelativePath(e.id)),
+      items: sorted.map(getRelativePath),
     });
   }
 
@@ -130,7 +155,7 @@ export function buildSidebar(
     if (items.length > 0) {
       result.push({
         text: g.title,
-        items: items.map(e => getRelativePath(e.id)),
+        items: items.map(getRelativePath),
       });
     }
   }
@@ -140,10 +165,9 @@ export function buildSidebar(
 
 export function buildTitleMap(entries: BookEntry[], bookSlug: string) {
   const map: Record<string, string> = {};
-  const prefix = bookSlug + "/";
   for (const e of entries) {
-    if (!isBookIndex(e) && !isGroupIndex(e) && e.id.startsWith(prefix)) {
-      map[getRelativePath(e.id)] = e.data.title;
+    if (!isBookIndex(e) && !isGroupIndex(e) && getBookSlug(e) === bookSlug) {
+      map[getRelativePath(e)] = e.data.title;
     }
   }
   return map;
@@ -167,8 +191,55 @@ export function getChapterEntry(
   bookSlug: string,
   relativeSlug: string
 ): BookEntry | undefined {
-  const prefix = bookSlug + "/";
   return entries.find(
-    e => !isBookIndex(e) && !isGroupIndex(e) && e.id === prefix + relativeSlug
+    e =>
+      !isBookIndex(e) &&
+      !isGroupIndex(e) &&
+      getBookSlug(e) === bookSlug &&
+      getRelativePath(e) === relativeSlug
   );
+}
+
+export function buildHrefMap(
+  entries: BookEntry[],
+  bookSlug: string,
+  locale: Locale = config.site.lang
+) {
+  const map: Record<string, string> = {};
+
+  for (const entry of entries) {
+    if (
+      isBookIndex(entry) ||
+      isGroupIndex(entry) ||
+      getBookSlug(entry) !== bookSlug
+    ) {
+      continue;
+    }
+
+    const relativePath = getRelativePath(entry);
+    map[relativePath] = getLocalizedPath(
+      `/books/${bookSlug}/${relativePath}`,
+      locale
+    );
+  }
+
+  return map;
+}
+
+export function buildSourceLocaleMap(entries: BookEntry[], bookSlug: string) {
+  const map: Record<string, Locale> = {};
+
+  for (const entry of entries) {
+    if (
+      isBookIndex(entry) ||
+      isGroupIndex(entry) ||
+      getBookSlug(entry) !== bookSlug
+    ) {
+      continue;
+    }
+
+    map[getRelativePath(entry)] = getContentLocale(entry, "books");
+  }
+
+  return map;
 }

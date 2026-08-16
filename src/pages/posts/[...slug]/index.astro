@@ -3,19 +3,38 @@ import { type CollectionEntry, getCollection } from "astro:content";
 import PostDetails from "@/layouts/PostDetails.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
 import { getPath } from "@/utils/getPath";
+import config from "@/config";
+import { getLocalizedPath } from "@/i18n";
+import { getContentLocale, getTranslationKey } from "@/utils/localizedContent";
+import type { Locale } from "@/types/config";
 
 type Props = {
   post: CollectionEntry<"blog">;
   prevPost: CollectionEntry<"blog"> | null;
   nextPost: CollectionEntry<"blog"> | null;
+  alternateUrl?: string;
+  alternateURLs?: Partial<Record<Locale, string>>;
 };
 
 export async function getStaticPaths() {
   const allPosts = await getCollection("blog", ({ data }) => !data.draft);
-  const sortedPosts = getSortedPosts(allPosts);
+  const sortedPosts = getSortedPosts(
+    allPosts.filter(post => getContentLocale(post, "blog") === config.site.lang)
+  );
 
   return sortedPosts.map(post => {
     const currentIndex = sortedPosts.findIndex(p => p.id === post.id);
+    const alternateLocale = config.i18n.locales.find(
+      locale => locale !== config.site.lang
+    );
+    const translation = alternateLocale
+      ? allPosts.find(
+          candidate =>
+            getTranslationKey(candidate, "blog") ===
+              getTranslationKey(post, "blog") &&
+            getContentLocale(candidate, "blog") === alternateLocale
+        )
+      : undefined;
     return {
       params: { slug: getPath(post.id, post.filePath, false) },
       props: {
@@ -25,12 +44,27 @@ export async function getStaticPaths() {
           currentIndex < sortedPosts.length - 1
             ? sortedPosts[currentIndex + 1]
             : null,
+        alternateUrl: alternateLocale
+          ? getLocalizedPath(getPath(post.id, post.filePath), alternateLocale)
+          : undefined,
+        alternateURLs: translation
+          ? {
+              [config.site.lang]: getPath(post.id, post.filePath),
+              [alternateLocale!]: getPath(translation.id, translation.filePath),
+            }
+          : {},
       },
     };
   });
 }
 
-const { post, prevPost, nextPost } = Astro.props;
+const { post, prevPost, nextPost, alternateUrl, alternateURLs } = Astro.props;
 ---
 
-<PostDetails post={post} prevPost={prevPost} nextPost={nextPost} />
+<PostDetails
+  post={post}
+  prevPost={prevPost}
+  nextPost={nextPost}
+  {alternateUrl}
+  {alternateURLs}
+/>
