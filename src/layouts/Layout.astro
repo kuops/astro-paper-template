@@ -17,7 +17,6 @@ type Props = {
   canonicalURL?: string;
   pubDatetime?: Date;
   modDatetime?: Date | null;
-  scrollSmooth?: boolean;
   alternateURLs?: Partial<Record<Locale, string>>;
   localeAlternates?: boolean;
 };
@@ -31,7 +30,6 @@ const {
   canonicalURL = new URL(Astro.url.pathname, Astro.url),
   pubDatetime,
   modDatetime,
-  scrollSmooth = false,
   alternateURLs = {},
   localeAlternates = false,
 } = Astro.props;
@@ -67,11 +65,7 @@ const structuredData = {
 ---
 
 <!doctype html>
-<html
-  dir={config.site.dir}
-  lang={locale}
-  class={scrollSmooth ? "scroll-smooth" : undefined}
->
+<html dir={config.site.dir} lang={locale}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
@@ -160,6 +154,101 @@ const structuredData = {
       )
     }
 
+    <script is:inline>
+      (() => {
+        if ("scrollRestoration" in history) {
+          history.scrollRestoration = "manual";
+        }
+
+        const state = window.history.state;
+        const top = Number(state?.scrollY);
+        const left = Number(state?.scrollX);
+
+        if (state?.__scrollPositionSaved && Number.isFinite(top) && top > 0) {
+          document.documentElement.style.removeProperty("overflow-anchor");
+          document.documentElement.style.minHeight = `${top + innerHeight}px`;
+          window.scrollTo({
+            left: Number.isFinite(left) ? left : 0,
+            top,
+            behavior: "instant",
+          });
+        }
+
+        let resetTimer = 0;
+        const resetScrollBehavior = () => {
+          document.documentElement.style.removeProperty("scroll-behavior");
+          window.clearTimeout(resetTimer);
+        };
+
+        let saveFrame = 0;
+        const saveScrollPosition = () => {
+          saveFrame = 0;
+          window.history.replaceState(
+            {
+              ...window.history.state,
+              __scrollPositionSaved: true,
+              scrollX: window.scrollX,
+              scrollY: window.scrollY,
+            },
+            ""
+          );
+        };
+
+        window.addEventListener(
+          "scroll",
+          () => {
+            if (!saveFrame) {
+              saveFrame = window.requestAnimationFrame(saveScrollPosition);
+            }
+          },
+          { passive: true }
+        );
+
+        document.addEventListener("click", event => {
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) {
+            return;
+          }
+
+          const element = event.target;
+          const link =
+            element instanceof Element ? element.closest("a[href]") : null;
+          if (!link) return;
+
+          const url = new URL(link.href, window.location.href);
+          if (
+            !url.hash ||
+            url.origin !== window.location.origin ||
+            url.pathname !== window.location.pathname ||
+            url.search !== window.location.search ||
+            !document.getElementById(decodeURIComponent(url.hash.slice(1)))
+          ) {
+            return;
+          }
+
+          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return;
+          }
+
+          window.clearTimeout(resetTimer);
+          document.documentElement.style.scrollBehavior = "smooth";
+          resetTimer = window.setTimeout(resetScrollBehavior, 1000);
+
+          if ("onscrollend" in window) {
+            window.addEventListener("scrollend", resetScrollBehavior, {
+              once: true,
+            });
+          }
+        });
+      })();
+    </script>
+
     <ClientRouter />
 
     <script is:inline>
@@ -195,6 +284,82 @@ const structuredData = {
   </head>
   <body>
     <slot />
+
+    <script is:inline>
+      (() => {
+        const state = window.history.state;
+        const savedTop = Number(state?.scrollY);
+        const hasSavedPosition =
+          state?.__scrollPositionSaved === true && Number.isFinite(savedTop);
+
+        if (window.location.hash && !hasSavedPosition) {
+          const id = decodeURIComponent(window.location.hash.slice(1));
+          const target = document.getElementById(id);
+          if (!target) return;
+
+          document.documentElement.style.overflowAnchor = "none";
+          const restoreHashTarget = () => {
+            target.scrollIntoView({ behavior: "instant", block: "start" });
+          };
+          const releaseAnchor = () => {
+            window.setTimeout(() => {
+              document.documentElement.style.removeProperty("overflow-anchor");
+            }, 1200);
+          };
+
+          restoreHashTarget();
+          document.addEventListener(
+            "article:layout-stable",
+            () => {
+              restoreHashTarget();
+              releaseAnchor();
+            },
+            { once: true }
+          );
+          return;
+        }
+
+        const top = savedTop;
+        const left = Number(state?.scrollX);
+
+        if (!Number.isFinite(top) || top < 0) return;
+
+        document.documentElement.style.removeProperty("min-height");
+
+        let finishTimer = 0;
+        let anchorTimer = 0;
+        const finishRestore = () => {
+          const latestState = window.history.state;
+          window.history.replaceState(
+            {
+              ...latestState,
+              __scrollPositionSaved: true,
+              scrollX: Number.isFinite(left) ? left : 0,
+              scrollY: top,
+            },
+            ""
+          );
+          window.clearTimeout(finishTimer);
+          window.clearTimeout(anchorTimer);
+          anchorTimer = window.setTimeout(() => {
+            document.documentElement.style.removeProperty("overflow-anchor");
+          }, 1200);
+        };
+
+        const restoreTarget = () => {
+          window.scrollTo({
+            left: Number.isFinite(left) ? left : 0,
+            top,
+            behavior: "instant",
+          });
+          finishTimer = window.setTimeout(finishRestore, 0);
+        };
+
+        document.addEventListener("article:layout-stable", restoreTarget, {
+          once: true,
+        });
+      })();
+    </script>
 
     <PagefindModal />
 

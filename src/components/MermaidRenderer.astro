@@ -457,12 +457,93 @@ const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
     requestAnimationFrame(fitView);
   }
 
+  function createMermaidWrapper(source: string, svg: string) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "mermaid-wrapper";
+    wrapper.dataset.mode = "preview";
+
+    const header = document.createElement("div");
+    header.className = "mermaid-header";
+
+    const tabGroup = document.createElement("div");
+    tabGroup.className = "mermaid-tab-group";
+
+    const previewTab = document.createElement("button");
+    previewTab.className = "mermaid-tab active";
+    previewTab.textContent = getI18n("i18n-mermaid-preview");
+    previewTab.dataset.tab = "preview";
+
+    const sourceTab = document.createElement("button");
+    sourceTab.className = "mermaid-tab";
+    sourceTab.textContent = getI18n("i18n-mermaid-source");
+    sourceTab.dataset.tab = "source";
+
+    tabGroup.append(previewTab, sourceTab);
+
+    const actions = document.createElement("div");
+    actions.className = "mermaid-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "mermaid-action-btn";
+    copyBtn.innerHTML = copySvg;
+    copyBtn.title = getI18n("i18n-mermaid-copy");
+    copyBtn.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(source);
+      copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      setTimeout(() => {
+        copyBtn.innerHTML = copySvg;
+      }, 1500);
+    });
+
+    const expandBtn = document.createElement("button");
+    expandBtn.className = "mermaid-action-btn";
+    expandBtn.innerHTML = expandSvg;
+    expandBtn.title = getI18n("i18n-mermaid-fullscreen");
+
+    const body = document.createElement("div");
+    body.className = "mermaid-body";
+
+    const previewEl = document.createElement("div");
+    previewEl.className = "mermaid-preview";
+    previewEl.dataset.mermaidSource = source;
+    previewEl.innerHTML = svg;
+
+    const sourceEl = document.createElement("pre");
+    sourceEl.className = "mermaid-source";
+    sourceEl.textContent = source;
+
+    expandBtn.addEventListener("click", () => {
+      createFullscreen(previewEl.innerHTML);
+    });
+
+    actions.append(copyBtn, expandBtn);
+    header.append(tabGroup, actions);
+    body.append(previewEl, sourceEl);
+    wrapper.append(header, body);
+
+    tabGroup.addEventListener("click", e => {
+      const tab = (e.target as HTMLElement).closest(".mermaid-tab");
+      if (!tab) return;
+      const mode = (tab as HTMLElement).dataset.tab;
+      wrapper.dataset.mode = mode;
+      tabGroup
+        .querySelectorAll(".mermaid-tab")
+        .forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+    });
+
+    return wrapper;
+  }
+
   async function renderMermaid() {
     mermaidSources.length = 0;
     const mermaidBlocks = document.querySelectorAll(
       'pre[data-language="mermaid"]'
     );
-    if (mermaidBlocks.length === 0) return;
+    if (mermaidBlocks.length === 0) {
+      document.dispatchEvent(new Event("article:layout-stable"));
+      return;
+    }
 
     initMermaidConfig();
 
@@ -476,87 +557,15 @@ const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
       const id = "mermaid-" + Math.random().toString(36).slice(2);
       try {
         const { svg } = await mermaid.render(id, source);
-
-        const wrapper = document.createElement("div");
-        wrapper.className = "mermaid-wrapper";
-        wrapper.dataset.mode = "preview";
-
-        const header = document.createElement("div");
-        header.className = "mermaid-header";
-
-        const tabGroup = document.createElement("div");
-        tabGroup.className = "mermaid-tab-group";
-
-        const previewTab = document.createElement("button");
-        previewTab.className = "mermaid-tab active";
-        previewTab.textContent = getI18n("i18n-mermaid-preview");
-        previewTab.dataset.tab = "preview";
-
-        const sourceTab = document.createElement("button");
-        sourceTab.className = "mermaid-tab";
-        sourceTab.textContent = getI18n("i18n-mermaid-source");
-        sourceTab.dataset.tab = "source";
-
-        tabGroup.append(previewTab, sourceTab);
-
-        const actions = document.createElement("div");
-        actions.className = "mermaid-actions";
-
-        const copyBtn = document.createElement("button");
-        copyBtn.className = "mermaid-action-btn";
-        copyBtn.innerHTML = copySvg;
-        copyBtn.title = getI18n("i18n-mermaid-copy");
-        copyBtn.addEventListener("click", async () => {
-          await navigator.clipboard.writeText(source);
-          copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-          setTimeout(() => {
-            copyBtn.innerHTML = copySvg;
-          }, 1500);
-        });
-
-        const expandBtn = document.createElement("button");
-        expandBtn.className = "mermaid-action-btn";
-        expandBtn.innerHTML = expandSvg;
-        expandBtn.title = getI18n("i18n-mermaid-fullscreen");
-        expandBtn.addEventListener("click", () => {
-          createFullscreen(previewEl.innerHTML);
-        });
-
-        actions.append(copyBtn, expandBtn);
-        header.append(tabGroup, actions);
-
-        const body = document.createElement("div");
-        body.className = "mermaid-body";
-
-        const previewEl = document.createElement("div");
-        previewEl.className = "mermaid-preview";
-        previewEl.dataset.mermaidSource = source;
-        previewEl.innerHTML = svg;
-
-        const sourceEl = document.createElement("pre");
-        sourceEl.className = "mermaid-source";
-        sourceEl.textContent = source;
-
-        body.append(previewEl, sourceEl);
-        wrapper.append(header, body);
-        el.replaceWith(wrapper);
-
-        tabGroup.addEventListener("click", e => {
-          const tab = (e.target as HTMLElement).closest(".mermaid-tab");
-          if (!tab) return;
-          const mode = (tab as HTMLElement).dataset.tab;
-          wrapper.dataset.mode = mode;
-          tabGroup
-            .querySelectorAll(".mermaid-tab")
-            .forEach(t => t.classList.remove("active"));
-          tab.classList.add("active");
-        });
+        el.replaceWith(createMermaidWrapper(source, svg));
       } catch {
         el.setAttribute("style", "color: red");
       } finally {
         document.getElementById("d" + id)?.remove();
       }
     }
+
+    document.dispatchEvent(new Event("article:layout-stable"));
   }
 
   async function rerenderMermaid() {

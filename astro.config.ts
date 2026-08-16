@@ -14,6 +14,7 @@ import remarkGfm from "remark-gfm";
 import remarkSupersub from "remark-supersub";
 import { remarkMark } from "remark-mark-highlight";
 import rehypeCallouts from "rehype-callouts";
+import rehypeImageDimensions from "./src/utils/rehypeImageDimensions";
 import {
   transformerNotationDiff,
   transformerNotationHighlight,
@@ -58,7 +59,7 @@ export default defineConfig({
         [remarkGfm, { singleTilde: false }],
         remarkMark,
       ],
-      rehypePlugins: [rehypeCallouts],
+      rehypePlugins: [rehypeCallouts, rehypeImageDimensions],
     }),
     shikiConfig: {
       // For more themes, visit https://shiki.style/themes

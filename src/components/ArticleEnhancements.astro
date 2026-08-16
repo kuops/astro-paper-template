@@ -84,6 +84,46 @@ const t = useTranslations(getLocaleFromPath(Astro.url.pathname));
   }
   addHeadingLinks();
 
+  function restoreArticleDetails() {
+    const details = Array.from(document.querySelectorAll("#article details"));
+    if (!details.length) return;
+
+    const storageKey = "article-details:" + window.location.pathname;
+    let saved = {};
+    try {
+      saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+    } catch {}
+
+    const stateKeys = details.map(function (detail, index) {
+      const summary = detail
+        .querySelector(":scope > summary")
+        ?.textContent?.trim();
+      return `${index}:${summary || "details"}`;
+    });
+
+    details.forEach(function (detail, index) {
+      const stateKey = stateKeys[index];
+      if (stateKey in saved) detail.open = Boolean(saved[stateKey]);
+    });
+
+    function saveState() {
+      const state = {};
+      details.forEach(function (detail, index) {
+        state[stateKeys[index]] = detail.open;
+      });
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(state));
+      } catch {}
+    }
+
+    details.forEach(function (detail) {
+      detail.addEventListener("toggle", saveState, {
+        signal: window.__articleEnhancementsController.signal,
+      });
+    });
+  }
+  restoreArticleDetails();
+
   function attachCopyButtons() {
     const i18nEl = document.getElementById("i18n-copy");
     const copyButtonLabel = i18nEl?.dataset.copy || "Copy";

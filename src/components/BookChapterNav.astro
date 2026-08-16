@@ -111,7 +111,10 @@ const {
         });
         const active = nav.querySelector("[data-current-chapter='true']");
         const parent = active?.closest("details[data-book-group]");
-        if (parent) parent.open = true;
+        const parentName = parent?.getAttribute("data-book-group");
+        if (parent && (!parentName || !(parentName in saved))) {
+          parent.open = true;
+        }
       }
 
       function saveState() {
@@ -125,11 +128,11 @@ const {
         } catch {}
       }
 
+      loadState();
+
       groups.forEach(function (el) {
         el.addEventListener("toggle", saveState, { signal: controller.signal });
       });
-
-      loadState();
     });
 
     window.__bookChapterNavController = controller;
