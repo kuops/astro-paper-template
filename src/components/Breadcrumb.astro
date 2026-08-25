@@ -106,7 +106,7 @@ if (segments[0] === "posts") {
   >
     <li>
       <a href={localize("/")} class="opacity-80">{t.nav.home}</a>
-      <span aria-hidden="true" class="opacity-80">&raquo;</span>
+      <span aria-hidden="true" class="mx-2.5 opacity-80">&raquo;</span>
     </li>
     {
       breadcrumbList.map((item, index) =>
@@ -124,7 +124,9 @@ if (segments[0] === "posts") {
             <a href={item.href} class="capitalize opacity-70">
               {item.label}
             </a>
-            <span aria-hidden="true">&raquo;</span>
+            <span aria-hidden="true" class="mx-2.5">
+              &raquo;
+            </span>
           </li>
         )
       )
