@@ -112,7 +112,7 @@ const layoutProps = {
   <Header maxWidth="mx-auto w-full max-w-5xl px-4" {alternateUrl} />
   <main
     id="main-content"
-    class:list={["mx-auto w-full max-w-5xl px-4 pb-12"]}
+    class:list={["mx-auto w-full max-w-5xl px-4 pb-12", "post-enter"]}
     data-pagefind-body
     data-pagefind-filter="type:blog"
   >
@@ -168,10 +168,6 @@ const layoutProps = {
       {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
     </ul>
 
-    <BackToTopButton />
-
-    {headings.length > 0 && <MobileToc {headings} />}
-
     <ShareLinks />
 
     <hr class="my-6 border-dashed" />
@@ -214,6 +210,8 @@ const layoutProps = {
       }
     </div>
   </main>
+  <BackToTopButton />
+  {headings.length > 0 && <MobileToc {headings} />}
   <Footer maxWidth="mx-auto w-full max-w-5xl px-4" />
 </Layout>
 
@@ -222,3 +220,24 @@ const layoutProps = {
 <MermaidRenderer />
 
 <ImageLightbox />
+
+<style>
+  @keyframes post-fade-in-down {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .post-enter {
+    animation: post-fade-in-down 0.4s ease-out both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .post-enter {
+      animation: none;
+    }
+  }
+</style>
