@@ -54,11 +54,13 @@
 - `src/pages/books/`：书籍首页、章节页路由
 - `src/utils/books.ts`：从文件系统推导书籍结构、侧边栏和章节顺序
 
-## 本地开发（Local Development）
-
-先安装依赖，再启动开发服务器：
+## 快速开始（Quick Start）
 
 ```bash
+# 使用 Astro 官方脚手架从这个模板初始化
+npm create astro@latest -- --template kuops/astro-paper-template
+
+# 安装依赖并启动
 npm install
 npm run dev
 ```
@@ -158,7 +160,7 @@ src/data/books/en/astro-guide/index.md
 
 ## 许可证（License）
 
-Licensed under the MIT License, Copyright © 2025
+Licensed under the MIT License, Copyright © 2025-2026
 
 ---
 
