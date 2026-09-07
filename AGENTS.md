@@ -16,7 +16,7 @@
 
 ## 架构（Architecture）
 
-基于 AstroPaper 的博客项目（Astro 5 + Tailwind CSS 4 + TypeScript）。
+基于 AstroPaper 的博客项目（Astro 7 + Tailwind CSS 4 + TypeScript）。
 
 - `src/config.ts` — 站点级配置（title、author、lang、timezone、i18n 等）。默认 `lang: "zh"`、`timezone: "Asia/Shanghai"`，支持配置 `zh/en`。
 - `src/content.config.ts` — blog 和 books collection 的 schema。博客文章位于 `src/data/blog/`，书籍内容位于 `src/data/books/`。
@@ -48,7 +48,7 @@
 
 通过 GitHub Actions (`.github/workflows/deploy.yml`) 部署到 GitHub Pages。推送到 `gh-pages` 分支时触发，使用 `npm ci` 和 `npm run build`，Node 版本为 24。注意：上游 CI 仍使用 pnpm，而本项目使用 npm。
 
-请把 `src/config.ts` 里的 `website` 设置为真实的 GitHub Pages 地址。如果部署到 `<username>.github.io/<repo>`，还需要在 `astro.config.ts` 中增加 `base: "/<repo>/"`。
+请把 `astro-paper.config.ts` 里的 `site.url` 设置为真实的 GitHub Pages 地址。如果部署到 `<username>.github.io/<repo>`，还需要在 `astro.config.ts` 中增加 `base: "/<repo>/"`。
 
 ## Git
 
